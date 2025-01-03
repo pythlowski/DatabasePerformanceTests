@@ -13,7 +13,7 @@ services:
     image: postgres:latest
     container_name: postgres
     environment:
-      POSTGRES_USER: admin
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: pass123!
     ports:
       - "5432:5432"
