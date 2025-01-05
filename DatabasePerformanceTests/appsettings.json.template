@@ -1,0 +1,9 @@
+{
+  "Connections": [
+    {
+      "Name": "",
+      "System": "Mongo/Postgres/MsSql",
+      "ConnectionString": ""
+    }
+  ]
+}
