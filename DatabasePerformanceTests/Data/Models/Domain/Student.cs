@@ -1,8 +1,8 @@
-namespace DatabasePerformanceTests.Data.Models.Sql;
+namespace DatabasePerformanceTests.Data.Models.Domain;
 
-public class SqlStudent
+public class Student
 {
-    public int StudentId { get; set; }
+    public int Id { get; set; }
     public string FirstName { get; set; }
     public string LastName { get; set; }
     public int AdmissionYear { get; set; }

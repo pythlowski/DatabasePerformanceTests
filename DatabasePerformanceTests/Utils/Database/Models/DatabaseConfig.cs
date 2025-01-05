@@ -1,4 +1,6 @@
-namespace DatabasePerformanceTests.Utils.Models;
+using DatabasePerformanceTests.Utils.Database.Models.Enums;
+
+namespace DatabasePerformanceTests.Utils.Database.Models;
 
 public class DatabaseConfig
 {

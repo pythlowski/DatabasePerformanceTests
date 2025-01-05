@@ -1,4 +1,4 @@
-namespace DatabasePerformanceTests.Utils.Models;
+namespace DatabasePerformanceTests.Utils.Database.Models.Enums;
 
 public enum DatabaseSystem
 {
