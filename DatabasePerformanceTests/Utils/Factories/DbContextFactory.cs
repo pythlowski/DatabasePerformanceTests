@@ -1,7 +1,7 @@
 using DatabasePerformanceTests.Data.Contexts;
 using DatabasePerformanceTests.Utils.Database.Models.Enums;
 
-namespace DatabasePerformanceTests.Utils;
+namespace DatabasePerformanceTests.Utils.Factories;
 
 public class DbContextFactory
 {

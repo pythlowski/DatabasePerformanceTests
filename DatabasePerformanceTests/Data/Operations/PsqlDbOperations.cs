@@ -12,7 +12,7 @@ public class PsqlDbOperations(PsqlDbContext context) : IDbOperations
 
     public Task DeleteEnrollmentsAsync(int count)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 
     public Task UpdateEnrollmentDatesAsync(int count)

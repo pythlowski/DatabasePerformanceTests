@@ -12,7 +12,8 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
 
     public Task DeleteEnrollmentsAsync(int count)
     {
-        throw new NotImplementedException();
+        var collection = context.GetCollection<CourseInstance>("courseInstances");
+        return Task.CompletedTask;
     }
 
     public Task UpdateEnrollmentDatesAsync(int count)
