@@ -34,6 +34,7 @@ public class MongoCourseInstance
                 {
                     StudentId = $"student-{data.Item1.Id}",
                     IsActive = data.Item1.IsActive,
+                    FirstName = data.Item1.FirstName,
                     LastName = data.Item1.LastName,
                     EnrollmentDate = data.Item2.EnrollmentDate,
                     EnrollmentId = data.Item2.Id
@@ -52,6 +53,7 @@ public class MongoCourseInstanceStudent
 {
     public string StudentId { get; set; }
     public bool IsActive { get; set; }
+    public string FirstName { get; set; }
     public string LastName { get; set; }
     public DateTime EnrollmentDate { get; set; }
     public int EnrollmentId { get; set; }

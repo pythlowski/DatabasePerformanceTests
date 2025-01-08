@@ -1,5 +1,6 @@
 using DatabasePerformanceTests.Data.Contexts;
 using DatabasePerformanceTests.Data.Models.Domain;
+using DatabasePerformanceTests.Data.Models.Results;
 
 namespace DatabasePerformanceTests.Data.Operations;
 
@@ -20,9 +21,46 @@ public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
         throw new NotImplementedException();
     }
 
-    public Task SelectEnrollmentsOrderedByIdAsync(int limit)
+    public async Task<List<StudentBase>> SelectStudentsOrderedByIdAsync(int limit)
     {
-        throw new NotImplementedException();
+        var data = await context.ExecuteReaderAsync($"SELECT TOP {limit} StudentId, FirstName, LastName FROM Students ORDER BY StudentId", true);
+        return data.Select(row => new StudentBase
+        {
+            Id = (int)row["StudentId"],
+            FirstName = (string)row["FirstName"],
+            LastName = (string)row["LastName"]
+        }).ToList();
+    }
+
+    public async Task<List<EnrollmentResult>> SelectEnrollmentsOrderedByIdAsync(int limit)
+    {
+        string query = @"
+            SELECT 
+	            e.EnrollmentId, 
+	            s.FirstName StudentFirstName, 
+	            s.LastName StudentLastName, 
+	            c.CourseName, 
+	            s.IsActive, 
+	            e.EnrollmentDate, 
+	            ci.Budget
+            FROM Enrollments e
+            JOIN Students s ON e.StudentId = s.StudentId
+            JOIN CourseInstances ci ON e.CourseInstanceId = ci.CourseInstanceId
+            JOIN Courses c ON ci.CourseId = c.CourseId
+            JOIN Instructors i ON ci.InstructorId = i.InstructorId
+            ORDER BY e.EnrollmentId;";
+        
+        var data = await context.ExecuteReaderAsync(query:query, useCurrentTransaction:true);
+        return data.Select(row => new EnrollmentResult
+        {
+            EnrollmentId = (int)row["EnrollmentId"],
+            StudentFirstName = (string)row["StudentFirstName"],
+            StudentLastName = (string)row["StudentLastName"],
+            CourseName = (string)row["CourseName"],
+            IsActive = (bool)row["IsActive"],
+            EnrollmentDate = (DateTime)row["EnrollmentDate"],
+            Budget = (long)row["Budget"]
+        }).ToList();
     }
 
     public Task SelectEnrollmentsFilteredByIsActiveAsync(bool isActive)

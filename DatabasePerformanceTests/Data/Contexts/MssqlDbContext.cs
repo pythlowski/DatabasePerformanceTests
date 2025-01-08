@@ -7,7 +7,7 @@ using Microsoft.Data.SqlClient;
 
 namespace DatabasePerformanceTests.Data.Contexts;
 
-public class MssqlDbContext : AbstractDbContext
+public class MssqlDbContext : AbstractDbContext, ISqlDbContext
 {    
     private SqlConnection _transactionConnection;
     private SqlTransaction _transaction;
@@ -60,6 +60,42 @@ public class MssqlDbContext : AbstractDbContext
         }
     }
 
+    public async Task<List<Dictionary<string, object>>> ExecuteReaderAsync(string query, bool useCurrentTransaction = false)
+    {
+        var results = new List<Dictionary<string, object>>();
+        SqlCommand command;
+        
+        if (useCurrentTransaction)
+        {
+            command = new SqlCommand(query, _transactionConnection, _transaction);
+            
+        }
+        else
+        {
+            await using var connection = Connection(DatabaseName);
+            await connection.OpenAsync();
+            
+            command = new SqlCommand(query, connection);
+        }
+
+        await using (command)
+        {
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var row = new Dictionary<string, object>();
+                for (var i = 0; i < reader.FieldCount; i++)
+                {
+                    row[reader.GetName(i)] = reader.GetValue(i);
+                }
+
+                results.Add(row);
+            }
+        }
+
+        return results;
+    }
+    
     public override async Task CreateDatabaseAsync()
     {
         await using var connection = Connection("master");
@@ -98,7 +134,7 @@ public class MssqlDbContext : AbstractDbContext
                 CourseId INT NOT NULL,
                 InstructorId INT NOT NULL,
                 AcademicYear INT NOT NULL,
-                Budget INT
+                Budget BIGINT
             );
 
             CREATE TABLE Enrollments (

@@ -31,11 +31,11 @@ namespace DatabasePerformanceTests
 
             // DataGeneratorConfig dataGeneratorConfig = new()
             // {
-            //     StudentsCount = 100_000,
+            //     StudentsCount = 1_000_000,
             //     InstructorsCount = 500,
             //     CoursesCount = 10000,
             //     CourseInstancesPerCourse = 20,
-            //     EnrollmentsPerStudent = 100
+            //     EnrollmentsPerStudent = 10
             // };
             
             DataGeneratorConfig dataGeneratorConfig = new()
