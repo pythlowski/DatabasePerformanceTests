@@ -1,6 +1,5 @@
-using DatabasePerformanceTests.Data.Models.Domain;
 using DatabasePerformanceTests.Utils;
-using DatabasePerformanceTests.Utils.Database.Models.Enums;
+using DatabasePerformanceTests.Utils.Config.Enums;
 using DatabasePerformanceTests.Utils.Generators.Models;
 using Npgsql;
 
@@ -248,6 +247,11 @@ public class PsqlDbContext : AbstractDbContext, ISqlDbContext
         _transaction.Dispose();
         _transaction = null;
         await CloseTransactionConnectionAsync();
+    }
+
+    public override async Task ClearCacheAsync()
+    {
+        await ExecuteNonQueryAsync("DISCARD ALL;");
     }
 
     private async Task CloseTransactionConnectionAsync()

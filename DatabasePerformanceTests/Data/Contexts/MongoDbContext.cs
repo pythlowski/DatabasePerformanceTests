@@ -1,8 +1,9 @@
 using DatabasePerformanceTests.Data.Models.Domain;
 using DatabasePerformanceTests.Data.Models.Mongo;
 using DatabasePerformanceTests.Utils;
-using DatabasePerformanceTests.Utils.Database.Models.Enums;
+using DatabasePerformanceTests.Utils.Config.Enums;
 using DatabasePerformanceTests.Utils.Generators.Models;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace DatabasePerformanceTests.Data.Contexts;
@@ -112,6 +113,12 @@ public class MongoDbContext : AbstractDbContext
         await _session.AbortTransactionAsync();
         _session.Dispose();
         _session = null;
+    }
+
+    public override async Task ClearCacheAsync()
+    {
+        var command = new BsonDocument { { "planCacheClear", "students" } };
+        await _testDatabase.RunCommandAsync<BsonDocument>(command);
     }
 
     public override async Task CommitTransactionAsync()

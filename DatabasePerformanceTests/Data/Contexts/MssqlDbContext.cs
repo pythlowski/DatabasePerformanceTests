@@ -1,7 +1,6 @@
 using System.Data;
-using DatabasePerformanceTests.Data.Models.Domain;
 using DatabasePerformanceTests.Utils;
-using DatabasePerformanceTests.Utils.Database.Models.Enums;
+using DatabasePerformanceTests.Utils.Config.Enums;
 using DatabasePerformanceTests.Utils.Generators.Models;
 using Microsoft.Data.SqlClient;
 
@@ -300,21 +299,29 @@ public class MssqlDbContext : AbstractDbContext, ISqlDbContext
 
     public override async Task StartTransactionAsync()
     {
-        _transactionConnection = Connection(DatabaseName);
-        await _transactionConnection.OpenAsync();
+        await OpenTransactionConnectionAsync();
         _transaction = _transactionConnection.BeginTransaction(IsolationLevel.ReadCommitted);
     }
     
     public override async Task CommitTransactionAsync()
     {
         await Task.Run(() => _transaction.Commit());
+        _transaction.Dispose();
         _transaction = null;
+        await CloseTransactionConnectionAsync();
     }
 
     public override async Task RollbackTransactionAsync()
     {
         await Task.Run(() => _transaction.Rollback());
+        _transaction.Dispose();
         _transaction = null;
+        await CloseTransactionConnectionAsync();
+    }
+
+    public override async Task ClearCacheAsync()
+    {
+        await ExecuteNonQueryAsync("DBCC FREEPROCCACHE; DBCC DROPCLEANBUFFERS;");
     }
 
     private async Task CloseTransactionConnectionAsync()
@@ -322,6 +329,8 @@ public class MssqlDbContext : AbstractDbContext, ISqlDbContext
         if (_transactionConnection != null && _transactionConnection.State == ConnectionState.Open)
         {
             await _transactionConnection.CloseAsync();
+            _transactionConnection.Dispose();
+            _transactionConnection = null;
         }
     }
 }

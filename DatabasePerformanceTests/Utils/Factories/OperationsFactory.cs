@@ -1,6 +1,5 @@
 using DatabasePerformanceTests.Data.Contexts;
 using DatabasePerformanceTests.Data.Operations;
-using DatabasePerformanceTests.Utils.Database.Models.Enums;
 
 namespace DatabasePerformanceTests.Utils.Factories;
 

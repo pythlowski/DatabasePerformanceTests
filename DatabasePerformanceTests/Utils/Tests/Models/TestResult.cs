@@ -1,18 +1,19 @@
-using DatabasePerformanceTests.Utils.Database.Models.Enums;
+using DatabasePerformanceTests.Data.Operations;
+using DatabasePerformanceTests.Utils.Config.Enums;
 
 namespace DatabasePerformanceTests.Utils.Tests.Models;
 
 public class TestResult
 {
-    public TestResult(string testName, DatabaseSystem system, long dataSize)
+    public TestResult(OperationType operationType, DatabaseSystem system, long dataSize)
     {
-        TestName = testName;
+        OperationType = operationType;
         System = system;
         DataSize = dataSize;
         IterationResults = new();
     }
 
-    public string TestName { get; set; }
+    public OperationType OperationType { get; set; }
     public DatabaseSystem System { get; set; }
     public long DataSize { get; set; }
     public List<TestIterationResult> IterationResults { get; set; }
@@ -22,7 +23,7 @@ public class TestResult
         IterationResults.Add(result);
     }
     
-    public override string ToString() => $"{TestName} ({System})";
+    public override string ToString() => $"{OperationType} ({System})";
 }
 
 public class TestIterationResult

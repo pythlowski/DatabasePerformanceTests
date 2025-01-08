@@ -8,19 +8,20 @@ namespace DatabasePerformanceTests.Utils.Tests;
 
 public class TestsRunner
 {
-    private readonly int TEST_REPETITIONS = 3;
+    private readonly int TEST_ITERATIONS;
     
     AbstractDbContext _context;
     private List<TestDefinition> _testDefinitions;
-    public TestsRunner(AbstractDbContext context)
+    public TestsRunner(AbstractDbContext context, int iterations)
     {
+        TEST_ITERATIONS = iterations;
         _context = context;
         var operations = new OperationsFactory().CreateOperationsFactory(context);
         
         _testDefinitions = new()
         {
             new TestDefinition(
-                "select 10 students",
+                OperationType.SelectStudentsOrderedById,
                 async parameters =>
                 {
                     int limit = (int)parameters["Limit"];
@@ -30,7 +31,7 @@ public class TestsRunner
                 10
             ),
             new TestDefinition(
-                "select 100 students",
+                OperationType.SelectStudentsOrderedById,
                 async parameters =>
                 {
                     int limit = (int)parameters["Limit"];
@@ -40,7 +41,7 @@ public class TestsRunner
                 100
             ),
             new TestDefinition(
-                "select 100 enrollments",
+                OperationType.SelectEnrollmentsOrderedById,
                 async parameters =>
                 {
                     int limit = (int)parameters["Limit"];
@@ -50,7 +51,7 @@ public class TestsRunner
                 100
             ),
             new TestDefinition(
-                "select 1000 enrollments",
+                OperationType.SelectEnrollmentsOrderedById,
                 async parameters =>
                 {
                     int limit = (int)parameters["Limit"];
@@ -62,24 +63,23 @@ public class TestsRunner
         };
     }
     
-     
-    
     public async Task<List<TestResult>> RunTestsAsync()
     {
         List<TestResult> results = new();
         
         foreach (var test in _testDefinitions)
         {
-            Console.WriteLine($"Running test: {test.Name} for {_context.DatabaseSystem}...");
-
-            TestResult result = new(test.Name, _context.DatabaseSystem, test.DataSize);
+            TestResult result = new(test.OperationType, _context.DatabaseSystem, test.DataSize);
             
-            foreach (var iteration in Enumerable.Range(0, TEST_REPETITIONS))
+            foreach (var iteration in Enumerable.Range(0, TEST_ITERATIONS))
             {
+                Logger.Log($"[{iteration+1}] Running test: {test.OperationType} with data size {test.DataSize} for {_context.DatabaseSystem}...");
+
                 TestIterationResult iterationResult = new(iteration + 1);
                 
                 try
                 {
+                    await _context.ClearCacheAsync();
                     await _context.StartTransactionAsync();
 
                     var stopwatch = Stopwatch.StartNew();
@@ -91,7 +91,7 @@ public class TestsRunner
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Test '{test.Name}' failed: {ex.Message}");
+                    Console.WriteLine($"Test '{test.OperationType}' failed: {ex.Message}");
                     iterationResult.IsSuccess = false;
                     iterationResult.ErrorMessage = ex.Message;
                 }

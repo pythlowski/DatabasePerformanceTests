@@ -1,5 +1,4 @@
-using DatabasePerformanceTests.Data.Models.Domain;
-using DatabasePerformanceTests.Utils.Database.Models.Enums;
+using DatabasePerformanceTests.Utils.Config.Enums;
 using DatabasePerformanceTests.Utils.Generators.Models;
 
 namespace DatabasePerformanceTests.Data.Contexts;
@@ -22,4 +21,6 @@ public abstract class AbstractDbContext
     public abstract Task StartTransactionAsync();
     public abstract Task CommitTransactionAsync();
     public abstract Task RollbackTransactionAsync();
+
+    public abstract Task ClearCacheAsync();
 }

@@ -5,5 +5,9 @@
       "System": "Mongo/Postgres/MsSql",
       "ConnectionString": ""
     }
-  ]
+  ],
+     "Tests": {
+       "Iterations": 30,
+       "OutputDirectory": ""
+     } 
 }

@@ -1,5 +1,5 @@
 using DatabasePerformanceTests.Data.Contexts;
-using DatabasePerformanceTests.Utils.Database.Models.Enums;
+using DatabasePerformanceTests.Utils.Config.Enums;
 
 namespace DatabasePerformanceTests.Utils.Factories;
 
