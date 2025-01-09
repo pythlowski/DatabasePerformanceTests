@@ -40,26 +40,26 @@ public class TestsRunner
                 new Dictionary<string, object> { { "Limit", 100 } },
                 100
             ),
-            new TestDefinition(
-                OperationType.SelectEnrollmentsOrderedById,
-                async parameters =>
-                {
-                    int limit = (int)parameters["Limit"];
-                    await operations.SelectEnrollmentsOrderedByIdAsync(limit);
-                },
-                new Dictionary<string, object> { { "Limit", 100 } },
-                100
-            ),
-            new TestDefinition(
-                OperationType.SelectEnrollmentsOrderedById,
-                async parameters =>
-                {
-                    int limit = (int)parameters["Limit"];
-                    await operations.SelectEnrollmentsOrderedByIdAsync(limit);
-                },
-                new Dictionary<string, object> { { "Limit", 1000 } },
-                100
-            ),
+            // new TestDefinition(
+            //     OperationType.SelectEnrollmentsOrderedById,
+            //     async parameters =>
+            //     {
+            //         int limit = (int)parameters["Limit"];
+            //         await operations.SelectEnrollmentsOrderedByIdAsync(limit);
+            //     },
+            //     new Dictionary<string, object> { { "Limit", 100_000 } },
+            //     100_000
+            // ),
+            // new TestDefinition(
+            //     OperationType.SelectEnrollmentsOrderedById,
+            //     async parameters =>
+            //     {
+            //         int limit = (int)parameters["Limit"];
+            //         await operations.SelectEnrollmentsOrderedByIdAsync(limit);
+            //     },
+            //     new Dictionary<string, object> { { "Limit", 1000 } },
+            //     100
+            // ),
         };
     }
     
@@ -75,7 +75,7 @@ public class TestsRunner
             {
                 Logger.Log($"[{iteration+1}] Running test: {test.OperationType} with data size {test.DataSize} for {_context.DatabaseSystem}...");
 
-                TestIterationResult iterationResult = new(iteration + 1);
+                IterationResult iterationResult = new(iteration + 1);
                 
                 try
                 {
@@ -99,6 +99,8 @@ public class TestsRunner
                 }
                 result.AddIterationResult(iterationResult);
             }
+
+            result.CalculateResultParameters();
             results.Add(result);
         }
         

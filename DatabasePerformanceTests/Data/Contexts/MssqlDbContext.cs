@@ -158,7 +158,7 @@ public class MssqlDbContext : AbstractDbContext, ISqlDbContext
         await using var connection = Connection(DatabaseName);
         await connection.OpenAsync();
 
-        Logger.Log("Inserting students...");
+        Logger.Log("MSSQL Inserting students...");
         var studentTable = new DataTable();
         studentTable.Columns.Add("StudentId", typeof(int));
         studentTable.Columns.Add("FirstName", typeof(string));
@@ -186,7 +186,7 @@ public class MssqlDbContext : AbstractDbContext, ISqlDbContext
 
         await studentBulkCopy.WriteToServerAsync(studentTable);
 
-        Logger.Log("Inserting courses...");
+        Logger.Log("MSSQL Inserting courses...");
         var courseTable = new DataTable();
         courseTable.Columns.Add("CourseId", typeof(int));
         courseTable.Columns.Add("CourseName", typeof(string));
@@ -206,7 +206,7 @@ public class MssqlDbContext : AbstractDbContext, ISqlDbContext
 
         await courseBulkCopy.WriteToServerAsync(courseTable);
 
-        Logger.Log("Inserting instructors...");
+        Logger.Log("MSSQL Inserting instructors...");
         var instructorTable = new DataTable();
         instructorTable.Columns.Add("InstructorId", typeof(int));
         instructorTable.Columns.Add("FirstName", typeof(string));
@@ -228,7 +228,7 @@ public class MssqlDbContext : AbstractDbContext, ISqlDbContext
 
         await instructorBulkCopy.WriteToServerAsync(instructorTable);
 
-        Logger.Log("Inserting course instances...");
+        Logger.Log("MSSQL Inserting course instances...");
         var courseInstanceTable = new DataTable();
         courseInstanceTable.Columns.Add("CourseInstanceId", typeof(int));
         courseInstanceTable.Columns.Add("CourseId", typeof(int));
@@ -279,6 +279,8 @@ public class MssqlDbContext : AbstractDbContext, ISqlDbContext
         enrollmentBulkCopy.ColumnMappings.Add("Grade", "Grade");
 
         await enrollmentBulkCopy.WriteToServerAsync(enrollmentTable);
+        
+        Logger.Log("MSSQL finished inserting.");
     }
 
     public override async Task DropDatabaseAsync()

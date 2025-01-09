@@ -9,6 +9,26 @@ namespace DatabasePerformanceTests.Data.Operations;
 
 public class MongoDbOperations(MongoDbContext context) : IDbOperations
 {
+    private List<BsonDocument> GetBaseEnrollmentsPipeline()
+    {
+        return new List<BsonDocument>
+        {
+            new("$unwind", "$EnrolledStudents"),
+            
+            new("$project", new BsonDocument
+            {
+                { "_id", 0 },
+                { "EnrollmentId", "$EnrolledStudents.EnrollmentId" },
+                { "StudentFirstName", "$EnrolledStudents.FirstName" },
+                { "StudentLastName", "$EnrolledStudents.LastName" },
+                { "CourseName", "$Course.Name" },
+                { "IsActive", "$EnrolledStudents.IsActive" },
+                { "EnrollmentDate", "$EnrolledStudents.EnrollmentDate" },
+                { "Budget", "$Budget" }
+            })
+        };
+    }
+    
     public Task InsertEnrollmentsAsync(IEnumerable<Enrollment> enrollments)
     {
         throw new NotImplementedException();
@@ -38,24 +58,8 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
     public async Task<List<EnrollmentResult>> SelectEnrollmentsOrderedByIdAsync(int limit)
     {
         var collection = context.GetCollection<MongoCourseInstance>("courseInstances");
-        var pipeline = new[]
-        {
-            new BsonDocument("$unwind", "$EnrolledStudents"),
-            
-            new BsonDocument("$project", new BsonDocument
-            {
-                { "_id", 0 },
-                { "EnrollmentId", "$EnrolledStudents.EnrollmentId" },
-                { "StudentFirstName", "$EnrolledStudents.FirstName" },
-                { "StudentLastName", "$EnrolledStudents.LastName" },
-                { "CourseName", "$Course.Name" },
-                { "IsActive", "$EnrolledStudents.IsActive" },
-                { "EnrollmentDate", "$EnrolledStudents.EnrollmentDate" },
-                { "Budget", "$Budget" }
-            }),
-
-            new BsonDocument("$sort", new BsonDocument("EnrollmentId", 1))
-        };
+        var pipeline = GetBaseEnrollmentsPipeline();
+        pipeline.Add(new ("$sort", new BsonDocument("EnrollmentId", 1)));
 
         var results = await collection.Aggregate<EnrollmentResult>(pipeline).ToListAsync();
         return results;

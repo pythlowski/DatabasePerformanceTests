@@ -10,7 +10,7 @@ namespace DatabasePerformanceTests.Utils;
 
 public static class MainMethods
 {
-    public static async Task CreateTables(string databaseName, DatabaseConfig[] databaseConfigs, DataGeneratorConfig dataGeneratorConfig)
+    public static async Task CreateDatabases(string databaseName, DatabaseConfig[] databaseConfigs, DataGeneratorConfig dataGeneratorConfig)
     {
         Logger.Log("Generating data...");
         var generatedData = new DataGenerator(dataGeneratorConfig).Generate();
@@ -25,7 +25,7 @@ public static class MainMethods
         }
     }
 
-    public static async Task RunTestsAndCleanup(string databaseName, TestsConfig testsConfig, DatabaseConfig[] databaseConfigs)
+    public static async Task RunTests(string databaseName, TestsConfig testsConfig, DatabaseConfig[] databaseConfigs)
     {
         var testsResults = new List<TestResult>();
 
@@ -36,16 +36,29 @@ public static class MainMethods
             var testsRunner = new TestsRunner(dbContext, testsConfig.Iterations);
             var results = await testsRunner.RunTestsAsync();
             testsResults.AddRange(results);
+        }
+        
+        TestResultsManager.WriteResultsToFile(
+            results:testsResults,
+            outputDirectory:testsConfig.OutputDirectory);
+    }
+    
+    public static async Task DropDatabases(string databaseName, DatabaseConfig[] databaseConfigs)
+    {
+        var factory = new DbContextFactory();
+        foreach (var config in databaseConfigs)
+        {
+            var dbContext = factory.CreateDbContext(config.System, config.ConnectionString, databaseName);
             await dbContext.DropDatabaseAsync();
         }
-        TestResultsWriter.WriteResultsToFile(
-            results:testsResults,
-            fileName:$"results_{DateTime.Now:yyyy_MM_dd_HH_mm_ss}",
-            outputDirectory:testsConfig.OutputDirectory);
     }
     
     public static async Task AnalyzeResults(TestsConfig testsConfig, DatabaseConfig[] databaseConfigs)
     {
-        
+        var results = TestResultsManager.ReadResultsFromFile(testsConfig.OutputDirectory);
+        foreach (var result in results)
+        {
+            Console.WriteLine(result);
+        }
     }
 }
