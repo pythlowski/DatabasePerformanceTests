@@ -5,12 +5,13 @@ namespace DatabasePerformanceTests.Data.Contexts;
 
 public abstract class AbstractDbContext
 {
-    public string DatabaseName = $"testdb_{DateTime.Now:yyyy_MM_dd_HH_mm_ss}";
+    public string DatabaseName { get; }
     public string ConnectionString { get; }
     public abstract DatabaseSystem DatabaseSystem { get; }
-    protected AbstractDbContext(string connectionString)
+    protected AbstractDbContext(string connectionString, string databaseName)
     {
         ConnectionString = connectionString;
+        DatabaseName = databaseName;
     }
 
     public abstract Task CreateDatabaseAsync();

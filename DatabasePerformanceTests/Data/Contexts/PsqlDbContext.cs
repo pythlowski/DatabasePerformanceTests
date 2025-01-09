@@ -10,8 +10,8 @@ public class PsqlDbContext : AbstractDbContext, ISqlDbContext
     private NpgsqlConnection _transactionConnection;
     private NpgsqlTransaction _transaction;
 
-    public PsqlDbContext(string connectionString)
-        : base(connectionString)
+    public PsqlDbContext(string connectionString, string databaseName)
+        : base(connectionString, databaseName)
     {
     }
     

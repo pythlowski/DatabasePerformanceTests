@@ -14,8 +14,8 @@ public class MongoDbContext : AbstractDbContext
     private IClientSessionHandle _session;
     IMongoDatabase _testDatabase;
     
-    public MongoDbContext(string connectionString)
-        : base(connectionString)
+    public MongoDbContext(string connectionString, string databaseName)
+        : base(connectionString, databaseName)
     {
         _client = new MongoClient(connectionString);
         _testDatabase = _client.GetDatabase(DatabaseName);

@@ -86,13 +86,11 @@ public class TestsRunner
                     await test.TestFunction(test.Parameters);
                     stopwatch.Stop();
 
-                    iterationResult.IsSuccess = true;
                     iterationResult.ExecutionTimeMilliseconds = (int)stopwatch.ElapsedMilliseconds;
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Test '{test.OperationType}' failed: {ex.Message}");
-                    iterationResult.IsSuccess = false;
                     iterationResult.ErrorMessage = ex.Message;
                 }
                 finally

@@ -35,7 +35,5 @@ public class TestIterationResult
 
     public int Iteration { get; set; }
     public int ExecutionTimeMilliseconds { get; set; }
-    public bool IsSuccess { get; set; }
     public string ErrorMessage { get; set; }
-    public object FirstRow { get; set; }
 }

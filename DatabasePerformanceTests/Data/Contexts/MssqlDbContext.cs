@@ -11,8 +11,8 @@ public class MssqlDbContext : AbstractDbContext, ISqlDbContext
     private SqlConnection _transactionConnection;
     private SqlTransaction _transaction;
 
-    public MssqlDbContext(string connectionString)
-        : base(connectionString)
+    public MssqlDbContext(string connectionString, string databaseName)
+        : base(connectionString, databaseName)
     {
     }
     
