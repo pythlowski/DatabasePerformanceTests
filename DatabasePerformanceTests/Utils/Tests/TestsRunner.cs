@@ -22,22 +22,18 @@ public class TestsRunner
         {
             new TestDefinition(
                 OperationType.SelectStudentsOrderedById,
-                async parameters =>
+                async (dataSize, parameters) =>
                 {
-                    int limit = (int)parameters["Limit"];
-                    await operations.SelectStudentsOrderedByIdAsync(limit);
+                    await operations.SelectStudentsOrderedByIdAsync(dataSize);
                 },
-                new Dictionary<string, object> { { "Limit", 10 } },
                 10
             ),
             new TestDefinition(
                 OperationType.SelectStudentsOrderedById,
-                async parameters =>
+                async (dataSize, parameters) =>
                 {
-                    int limit = (int)parameters["Limit"];
-                    await operations.SelectStudentsOrderedByIdAsync(limit);
+                    await operations.SelectStudentsOrderedByIdAsync(dataSize);
                 },
-                new Dictionary<string, object> { { "Limit", 100 } },
                 100
             ),
             // new TestDefinition(
@@ -83,7 +79,7 @@ public class TestsRunner
                     await _context.StartTransactionAsync();
 
                     var stopwatch = Stopwatch.StartNew();
-                    await test.TestFunction(test.Parameters);
+                    await test.TestFunction(test.DataSize, test.Parameters);
                     stopwatch.Stop();
 
                     iterationResult.ExecutionTimeMilliseconds = (int)stopwatch.ElapsedMilliseconds;
