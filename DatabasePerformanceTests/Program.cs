@@ -18,27 +18,27 @@ namespace DatabasePerformanceTests
             var databaseConfigs = configuration.GetSection("Connections").Get<DatabaseConfig[]>() 
                                   ?? throw new InvalidDataException("appsettings.json configuration requires Connections section");
             
-            DataGeneratorConfig dataGeneratorConfig = new()
-            {
-                StudentsCount = 10_000_000,
-                InstructorsCount = 500,
-                CoursesCount = 1000,
-                CourseInstancesPerCourse = 10,
-                EnrollmentsPerStudent = 1
-            };
-            
             // DataGeneratorConfig dataGeneratorConfig = new()
             // {
-            //     StudentsCount = 1000,
-            //     InstructorsCount = 5,
-            //     CoursesCount = 100,
-            //     CourseInstancesPerCourse = 2,
+            //     StudentsCount = 10_000_00,
+            //     InstructorsCount = 500,
+            //     CoursesCount = 1000,
+            //     CourseInstancesPerCourse = 10,
             //     EnrollmentsPerStudent = 10
             // };
-
-            string databaseName = "testdb_latest_big";
             
-            string method = args.Length > 0 ? args[0] : "create";
+            DataGeneratorConfig dataGeneratorConfig = new()
+            {
+                StudentsCount = 1000,
+                InstructorsCount = 5,
+                CoursesCount = 100,
+                CourseInstancesPerCourse = 2,
+                EnrollmentsPerStudent = 10
+            };
+
+            string databaseName = "testdb4";
+            
+            string method = args.Length > 0 ? args[0] : "tests";
             switch (method.ToLower())
             {
                 case "create":

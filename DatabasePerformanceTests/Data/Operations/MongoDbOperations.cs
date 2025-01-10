@@ -13,18 +13,13 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
     {
         var pipeline = new List<BsonDocument>
         {
-            new("$unwind", "$EnrolledStudents"),
             matchFilter != null ? new BsonDocument("$match", matchFilter) : null,
             new("$project", new BsonDocument
             {
                 { "_id", 0 },
-                { "EnrollmentId", "$EnrolledStudents.EnrollmentId" },
-                { "StudentFirstName", "$EnrolledStudents.FirstName" },
-                { "StudentLastName", "$EnrolledStudents.LastName" },
-                // { "CourseName", "$Course.Name" },
-                // { "IsActive", "$EnrolledStudents.IsActive" },
-                // { "EnrollmentDate", "$EnrolledStudents.EnrollmentDate" },
-                // { "Budget", "$Budget" }
+                { "EnrollmentId", "$_id" },
+                { "StudentFirstName", "$Student.FirstName" },
+                { "StudentLastName", "$Student.LastName" }
             })
         };
         pipeline.RemoveAll(stage => stage == null);
@@ -59,9 +54,9 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
 
     public async Task<List<EnrollmentResult>> SelectEnrollmentsOrderedByIdAsync(int limit)
     {
-        var collection = context.GetCollection<MongoCourseInstance>("courseInstances");
+        var collection = context.GetCollection<MongoCourseInstance>("enrollments");
         var pipeline = GetBaseEnrollmentsPipeline();
-        pipeline.Add(new ("$sort", new BsonDocument("EnrollmentId", 1)));
+        pipeline.Add(new ("$sort", new BsonDocument("_id", 1)));
 
         var results = await collection.Aggregate<EnrollmentResult>(pipeline).ToListAsync();
         return results;
@@ -69,10 +64,10 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
 
     public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByIsActiveAsync(bool isActive)
     {
-        var collection = context.GetCollection<MongoCourseInstance>("courseInstances");
+        var collection = context.GetCollection<MongoCourseInstance>("enrollments");
         BsonDocument matchFilter = new()
         {
-            { "EnrolledStudents.IsActive", isActive }
+            { "Student.IsActive", isActive }
         };
         var pipeline = GetBaseEnrollmentsPipeline(matchFilter);
         var results = await collection.Aggregate<EnrollmentResult>(pipeline).ToListAsync();

@@ -34,6 +34,7 @@ public class MongoDbContext : AbstractDbContext
         await _testDatabase.CreateCollectionAsync("students");
         await _testDatabase.CreateCollectionAsync("instructors");
         await _testDatabase.CreateCollectionAsync("courseInstances");
+        await _testDatabase.CreateCollectionAsync("enrollments");
     }
     
     public IMongoCollection<T> GetCollection<T>(string collectionName)
@@ -53,16 +54,20 @@ public class MongoDbContext : AbstractDbContext
         Logger.Log("MongoDB Finished inserting instructors.");
         
         var courseInstancesCollection = _testDatabase.GetCollection<MongoCourseInstance>("courseInstances");
-        var denormalizedCourseInstances = GetDenormalizedCourseInstances(data).ToList();
-        Logger.Log("MongoDB Prepared denormalized course instances.");
-        
+        var denormalizedcourseInstances = GetDenormalizedCourseInstances(data).ToList();
+        await courseInstancesCollection.InsertManyAsync(denormalizedcourseInstances);
+        Logger.Log("MongoDB Finished inserting courseInstances.");
+
+        var enrollmentsCollection = _testDatabase.GetCollection<MongoEnrollment>("enrollments");
+        var denormalizedEnrollments = GetDenormalizedEnrollments(data).ToList();
+
         Logger.Log("MongoDB Inserting course instances...");
-        var bulkOps = new List<WriteModel<MongoCourseInstance>>();
-        foreach(var mongoCourseInstance in denormalizedCourseInstances)
+        var bulkOps = new List<WriteModel<MongoEnrollment>>();
+        foreach(var mongoEnrollment in denormalizedEnrollments)
         {
-            bulkOps.Add(new InsertOneModel<MongoCourseInstance>(mongoCourseInstance));
+            bulkOps.Add(new InsertOneModel<MongoEnrollment>(mongoEnrollment));
         }
-        await courseInstancesCollection.BulkWriteAsync(bulkOps);
+        await enrollmentsCollection.BulkWriteAsync(bulkOps);
 
         // await courseInstancesCollection.InsertManyAsync(denormalizedCourseInstances);
         Logger.Log("MongoDB Finished inserting course instances.");
@@ -72,50 +77,59 @@ public class MongoDbContext : AbstractDbContext
 
     public override async Task CreateIndexesAsync()
     {
-        var collection = _testDatabase.GetCollection<MongoCourseInstance>("courseInstances");
-        
-        var budgetIndex = new CreateIndexModel<MongoCourseInstance>(
-            Builders<MongoCourseInstance>.IndexKeys.Ascending(x => x.Budget)
-        );
-        
-        var enrolledStudentsComplexIndex = new CreateIndexModel<MongoCourseInstance>(
-            Builders<MongoCourseInstance>.IndexKeys
-                .Ascending("EnrolledStudents.IsActive")
-                .Ascending("EnrolledStudents.LastName")
-                .Ascending("EnrolledStudents.EnrollmentDate")
-        );
-        
-        var enrolledStudentsIsActiveIndex = new CreateIndexModel<MongoCourseInstance>(
-            Builders<MongoCourseInstance>.IndexKeys
-                .Ascending("EnrolledStudents.IsActive")
-        );
-        
-        var enrolledStudentsLastNameIndex = new CreateIndexModel<MongoCourseInstance>(
-            Builders<MongoCourseInstance>.IndexKeys
-                .Text("EnrolledStudents.LastName")
-        );
-        
-        var enrolledStudentsEnrollmentDateIndex = new CreateIndexModel<MongoCourseInstance>(
-            Builders<MongoCourseInstance>.IndexKeys
-                .Ascending("EnrolledStudents.EnrollmentDate")
-        );
-        
-        await collection.Indexes.CreateOneAsync(budgetIndex);
-        await collection.Indexes.CreateOneAsync(enrolledStudentsComplexIndex);
-        await collection.Indexes.CreateOneAsync(enrolledStudentsIsActiveIndex);
-        await collection.Indexes.CreateOneAsync(enrolledStudentsLastNameIndex);
-        await collection.Indexes.CreateOneAsync(enrolledStudentsEnrollmentDateIndex);
+        // var collection = _testDatabase.GetCollection<MongoCourseInstance>("courseInstances");
+        //
+        // var budgetIndex = new CreateIndexModel<MongoCourseInstance>(
+        //     Builders<MongoCourseInstance>.IndexKeys.Ascending(x => x.Budget)
+        // );
+        //
+        // var enrolledStudentsComplexIndex = new CreateIndexModel<MongoCourseInstance>(
+        //     Builders<MongoCourseInstance>.IndexKeys
+        //         .Ascending("EnrolledStudents.IsActive")
+        //         .Ascending("EnrolledStudents.LastName")
+        //         .Ascending("EnrolledStudents.EnrollmentDate")
+        // );
+        //
+        // var enrolledStudentsIsActiveIndex = new CreateIndexModel<MongoCourseInstance>(
+        //     Builders<MongoCourseInstance>.IndexKeys
+        //         .Ascending("EnrolledStudents.IsActive")
+        // );
+        //
+        // var enrolledStudentsLastNameIndex = new CreateIndexModel<MongoCourseInstance>(
+        //     Builders<MongoCourseInstance>.IndexKeys
+        //         .Text("EnrolledStudents.LastName")
+        // );
+        //
+        // var enrolledStudentsEnrollmentDateIndex = new CreateIndexModel<MongoCourseInstance>(
+        //     Builders<MongoCourseInstance>.IndexKeys
+        //         .Ascending("EnrolledStudents.EnrollmentDate")
+        // );
+        //
+        // await collection.Indexes.CreateOneAsync(budgetIndex);
+        // await collection.Indexes.CreateOneAsync(enrolledStudentsComplexIndex);
+        // await collection.Indexes.CreateOneAsync(enrolledStudentsIsActiveIndex);
+        // await collection.Indexes.CreateOneAsync(enrolledStudentsLastNameIndex);
+        // await collection.Indexes.CreateOneAsync(enrolledStudentsEnrollmentDateIndex);
     }
 
+    private IEnumerable<MongoEnrollment> GetDenormalizedEnrollments(GeneratedData data)
+    {
+        foreach (var enrollment in data.Enrollments)
+        {
+            var student = data.Students.First(s => s.Id == enrollment.StudentId);
+            var courseInstance = data.CourseInstances.First(c => c.Id == enrollment.CourseInstanceId);
+            var course = data.Courses.First(c => c.Id == courseInstance.CourseId);
+            yield return MongoEnrollment.FromDomain(enrollment, student, courseInstance, course);
+        }
+    }
+    
     private IEnumerable<MongoCourseInstance> GetDenormalizedCourseInstances(GeneratedData data)
     {
         foreach (var courseInstance in data.CourseInstances)
         {
-            var course = data.Courses.First(c => c.Id == courseInstance.CourseId);
             var instructor = data.Instructors.First(i => i.Id == courseInstance.InstructorId);
-            data.CourseInstanceStudentMap.TryGetValue(courseInstance.Id, out var enrolledStudents);
-            
-            yield return MongoCourseInstance.FromDomain(courseInstance, course, instructor, enrolledStudents ?? new List<(Student, Enrollment)>());
+            var course = data.Courses.First(c => c.Id == courseInstance.CourseId);
+            yield return MongoCourseInstance.FromDomain(courseInstance, course, instructor);
         }
     }
     
