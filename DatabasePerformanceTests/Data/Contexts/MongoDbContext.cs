@@ -25,7 +25,7 @@ public class MongoDbContext : AbstractDbContext
 
     public override async Task CreateDatabaseAsync()
     {
-        await _testDatabase.CreateCollectionAsync("testCollection");
+        await _testDatabase.CreateCollectionAsync("students");
         Logger.Log($"MongoDB database '{DatabaseName}' created.");
     }
 
@@ -56,19 +56,6 @@ public class MongoDbContext : AbstractDbContext
         var denormalizedCourseInstances = GetDenormalizedCourseInstances(data).ToList();
         Logger.Log("MongoDB Prepared denormalized course instances.");
         
-        // const int batchSize = 10000;
-        // for (int i = 0; i < denormalizedCourseInstances.Count; i += batchSize)
-        // {
-        //     Logger.Log($"batch {i+1}");
-        //     var batch = denormalizedCourseInstances.Skip(i).Take(batchSize).ToList();
-        //     var bulkOps = new List<WriteModel<MongoCourseInstance>>();
-        //     foreach (var mongoCourseInstance in batch)
-        //     {
-        //         bulkOps.Add(new InsertOneModel<MongoCourseInstance>(mongoCourseInstance));
-        //     }
-        //     await courseInstancesCollection.BulkWriteAsync(bulkOps);
-        // }
-        
         Logger.Log("MongoDB Inserting course instances...");
         var bulkOps = new List<WriteModel<MongoCourseInstance>>();
         foreach(var mongoCourseInstance in denormalizedCourseInstances)
@@ -81,6 +68,43 @@ public class MongoDbContext : AbstractDbContext
         Logger.Log("MongoDB Finished inserting course instances.");
         
         
+    }
+
+    public override async Task CreateIndexesAsync()
+    {
+        var collection = _testDatabase.GetCollection<MongoCourseInstance>("courseInstances");
+        
+        var budgetIndex = new CreateIndexModel<MongoCourseInstance>(
+            Builders<MongoCourseInstance>.IndexKeys.Ascending(x => x.Budget)
+        );
+        
+        var enrolledStudentsComplexIndex = new CreateIndexModel<MongoCourseInstance>(
+            Builders<MongoCourseInstance>.IndexKeys
+                .Ascending("EnrolledStudents.IsActive")
+                .Ascending("EnrolledStudents.LastName")
+                .Ascending("EnrolledStudents.EnrollmentDate")
+        );
+        
+        var enrolledStudentsIsActiveIndex = new CreateIndexModel<MongoCourseInstance>(
+            Builders<MongoCourseInstance>.IndexKeys
+                .Ascending("EnrolledStudents.IsActive")
+        );
+        
+        var enrolledStudentsLastNameIndex = new CreateIndexModel<MongoCourseInstance>(
+            Builders<MongoCourseInstance>.IndexKeys
+                .Text("EnrolledStudents.LastName")
+        );
+        
+        var enrolledStudentsEnrollmentDateIndex = new CreateIndexModel<MongoCourseInstance>(
+            Builders<MongoCourseInstance>.IndexKeys
+                .Ascending("EnrolledStudents.EnrollmentDate")
+        );
+        
+        await collection.Indexes.CreateOneAsync(budgetIndex);
+        await collection.Indexes.CreateOneAsync(enrolledStudentsComplexIndex);
+        await collection.Indexes.CreateOneAsync(enrolledStudentsIsActiveIndex);
+        await collection.Indexes.CreateOneAsync(enrolledStudentsLastNameIndex);
+        await collection.Indexes.CreateOneAsync(enrolledStudentsEnrollmentDateIndex);
     }
 
     private IEnumerable<MongoCourseInstance> GetDenormalizedCourseInstances(GeneratedData data)

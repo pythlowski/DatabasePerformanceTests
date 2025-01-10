@@ -17,6 +17,7 @@ public abstract class AbstractDbContext
     public abstract Task CreateDatabaseAsync();
     public abstract Task CreateTablesAsync();
     public abstract Task PopulateDatabaseAsync(GeneratedData data);
+    public abstract Task CreateIndexesAsync();
     public abstract Task DropDatabaseAsync();
     
     public abstract Task StartTransactionAsync();

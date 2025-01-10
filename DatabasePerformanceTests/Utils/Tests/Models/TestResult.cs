@@ -5,7 +5,7 @@ namespace DatabasePerformanceTests.Utils.Tests.Models;
 
 public class TestResult
 {
-    public TestResult(OperationType operationType, DatabaseSystem system, long dataSize)
+    public TestResult(OperationType operationType, DatabaseSystem system, int? dataSize)
     {
         OperationType = operationType;
         System = system;
@@ -15,7 +15,7 @@ public class TestResult
 
     public OperationType OperationType { get; set; }
     public DatabaseSystem System { get; set; }
-    public long DataSize { get; set; }
+    public int? DataSize { get; set; }
     public List<IterationResult> IterationResults { get; set; }
     public ResultParameters ResultParameters { get; set; }
 
@@ -62,13 +62,19 @@ public class ResultParameters
         return new ResultParameters
         {
             Average = times.Average(),
-            Median = times.Count % 2 == 0
-                ? (times[times.Count / 2 - 1] + times[times.Count / 2]) / 2
-                : times[times.Count / 2],
+            Median = GetMedian(times),
             Minimum = times.Min(),
             Maximum = times.Max(),
             Percentile90 = times[(int)(times.Count * 0.90) - 1],
             Percentile95 = times[(int)(times.Count * 0.95) - 1],
         };
+    }
+    
+    private static double GetMedian(List<int> values)
+    {
+        return values.OrderBy(item => item)     // from sorted sequence
+            .Skip((values.Count - 1) / 2)  // we skip leading half items
+            .Take(2 - values.Count % 2)    // take one or two middle items 
+            .Average();
     }
 }

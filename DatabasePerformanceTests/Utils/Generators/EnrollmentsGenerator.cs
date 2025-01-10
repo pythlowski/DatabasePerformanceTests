@@ -17,18 +17,17 @@ public class EnrollmentsGenerator
             courseInstanceStudentMap[i] = new List<(Student, Enrollment)>();
         }
         
-        var randomStudent = students[random.Next(students.Count)];
-        
         var faker = new Faker<Enrollment>()
             .RuleFor(e => e.Id, f => f.IndexFaker + 1)
-            .RuleFor(e => e.StudentId, _ => randomStudent.Id)
             .RuleFor(e => e.CourseInstanceId, f => f.Random.Number(1, courseInstancesCount))
             .RuleFor(e => e.EnrollmentDate, f => f.Date.Past(10))
             .RuleFor(e => e.Grade, f => f.PickRandom(grades));
 
         for (int i = 0; i < students.Count * enrollmentsPerStudent; i++)
         {
+            var randomStudent = students[random.Next(students.Count)];
             var enrollment = faker.Generate();
+            enrollment.StudentId = randomStudent.Id;
             enrollments.Add(enrollment);
 
             if (!courseInstanceStudentMap.ContainsKey(enrollment.CourseInstanceId))

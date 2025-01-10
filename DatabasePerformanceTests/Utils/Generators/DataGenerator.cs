@@ -12,7 +12,7 @@ public class DataGenerator(DataGeneratorConfig config)
         var courseInstances = new CourseInstancesGenerator().Generate(config.CoursesCount, config.InstructorsCount, config.CourseInstancesPerCourse);
         var (enrollments, courseInstanceStudentMap) = new EnrollmentsGenerator().Generate(students, config.CoursesCount * config.CourseInstancesPerCourse, config.EnrollmentsPerStudent);
         
-        return new GeneratedData()
+        return new GeneratedData
         {
             Students = students,
             Instructors = instructors,

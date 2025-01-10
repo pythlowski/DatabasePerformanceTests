@@ -283,6 +283,30 @@ public class MssqlDbContext : AbstractDbContext, ISqlDbContext
         Logger.Log("MSSQL finished inserting.");
     }
 
+    public override async Task CreateIndexesAsync()
+    {
+        await using var connection = Connection(DatabaseName);
+        await connection.OpenAsync();
+        await using var command = new SqlCommand(@"
+            CREATE INDEX idxStudentsLastName ON Students (LastName);
+            CREATE INDEX idxStudentsActiveLastNameDate ON Students (IsActive, LastName);
+
+            CREATE INDEX idxCoursesCourseId ON Courses (CourseId);
+
+            CREATE INDEX idxInstructorsInstructorId ON Instructors (InstructorId);
+
+            CREATE INDEX idxCourseInstancesCourseId ON CourseInstances (CourseId);
+            CREATE INDEX idxCourseInstancesInstructorId ON CourseInstances (InstructorId);
+            CREATE INDEX idxCourseInstancesCourseInstructor ON CourseInstances (CourseId, InstructorId);
+
+            CREATE INDEX idxEnrollmentsStudentId ON Enrollments (StudentId);
+            CREATE INDEX idxEnrollmentsCourseInstanceId ON Enrollments (CourseInstanceId);
+            CREATE INDEX idxEnrollmentsEnrollmentDate ON Enrollments (EnrollmentDate);
+            CREATE INDEX idxEnrollmentsStudentCourse ON Enrollments (StudentId, CourseInstanceId);
+        ", connection);
+        await command.ExecuteNonQueryAsync();
+    }
+
     public override async Task DropDatabaseAsync()
     {
         await using var connection = Connection("master");

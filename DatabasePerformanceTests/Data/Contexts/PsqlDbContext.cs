@@ -207,6 +207,31 @@ public class PsqlDbContext : AbstractDbContext, ISqlDbContext
         }
     }
 
+    public override async Task CreateIndexesAsync()
+    {
+        await using var connection = Connection(DatabaseName);
+        await connection.OpenAsync();
+        await using var command = new NpgsqlCommand(@"
+            CREATE EXTENSION IF NOT EXISTS pg_trgm;
+            CREATE INDEX ""idxStudentsLastNameTrgm"" ON ""Students"" USING gin (""LastName"" gin_trgm_ops);
+            CREATE INDEX ""idxStudentsActiveLastNameDate"" ON ""Students"" (""IsActive"", ""LastName"");
+
+            CREATE INDEX ""idxCoursesCourseId"" ON ""Courses"" (""CourseId"");
+
+            CREATE INDEX ""idxInstructorsInstructorId"" ON ""Instructors"" (""InstructorId"");
+
+            CREATE INDEX ""idxCourseInstancesCourseId"" ON ""CourseInstances"" (""CourseId"");
+            CREATE INDEX ""idxCourseInstancesInstructorId"" ON ""CourseInstances"" (""InstructorId"");
+            CREATE INDEX ""idxCourseInstancesCourseInstructor"" ON ""CourseInstances"" (""CourseId"", ""InstructorId"");
+
+            CREATE INDEX ""idxEnrollmentsStudentId"" ON ""Enrollments"" (""StudentId"");
+            CREATE INDEX ""idxEnrollmentsCourseInstanceId"" ON ""Enrollments"" (""CourseInstanceId"");
+            CREATE INDEX ""idxEnrollmentsEnrollmentDate"" ON ""Enrollments"" (""EnrollmentDate"");
+            CREATE INDEX ""idxEnrollmentsStudentCourse"" ON ""Enrollments"" (""StudentId"", ""CourseInstanceId"");
+        ", connection);
+        await command.ExecuteNonQueryAsync();
+    }
+
     public static string EscapeString(string input)
     {
         return input.Replace("'", "''");

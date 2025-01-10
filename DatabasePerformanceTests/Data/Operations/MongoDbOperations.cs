@@ -9,24 +9,26 @@ namespace DatabasePerformanceTests.Data.Operations;
 
 public class MongoDbOperations(MongoDbContext context) : IDbOperations
 {
-    private List<BsonDocument> GetBaseEnrollmentsPipeline()
+    private List<BsonDocument> GetBaseEnrollmentsPipeline(BsonDocument? matchFilter = null)
     {
-        return new List<BsonDocument>
+        var pipeline = new List<BsonDocument>
         {
             new("$unwind", "$EnrolledStudents"),
-            
+            matchFilter != null ? new BsonDocument("$match", matchFilter) : null,
             new("$project", new BsonDocument
             {
                 { "_id", 0 },
                 { "EnrollmentId", "$EnrolledStudents.EnrollmentId" },
                 { "StudentFirstName", "$EnrolledStudents.FirstName" },
                 { "StudentLastName", "$EnrolledStudents.LastName" },
-                { "CourseName", "$Course.Name" },
-                { "IsActive", "$EnrolledStudents.IsActive" },
-                { "EnrollmentDate", "$EnrolledStudents.EnrollmentDate" },
-                { "Budget", "$Budget" }
+                // { "CourseName", "$Course.Name" },
+                // { "IsActive", "$EnrolledStudents.IsActive" },
+                // { "EnrollmentDate", "$EnrolledStudents.EnrollmentDate" },
+                // { "Budget", "$Budget" }
             })
         };
+        pipeline.RemoveAll(stage => stage == null);
+        return pipeline;
     }
     
     public Task InsertEnrollmentsAsync(IEnumerable<Enrollment> enrollments)
@@ -65,9 +67,16 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
         return results;
     }
 
-    public Task SelectEnrollmentsFilteredByIsActiveAsync(bool isActive)
+    public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByIsActiveAsync(bool isActive)
     {
-        throw new NotImplementedException();
+        var collection = context.GetCollection<MongoCourseInstance>("courseInstances");
+        BsonDocument matchFilter = new()
+        {
+            { "EnrolledStudents.IsActive", isActive }
+        };
+        var pipeline = GetBaseEnrollmentsPipeline(matchFilter);
+        var results = await collection.Aggregate<EnrollmentResult>(pipeline).ToListAsync();
+        return results;
     }
 
     public Task SelectEnrollmentsFilteredByEnrollmentDateAsync(DateTime dateFrom, DateTime dateTo)

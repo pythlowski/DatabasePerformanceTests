@@ -20,11 +20,11 @@ namespace DatabasePerformanceTests
             
             DataGeneratorConfig dataGeneratorConfig = new()
             {
-                StudentsCount = 1_000_000,
+                StudentsCount = 10_000_000,
                 InstructorsCount = 500,
-                CoursesCount = 10000,
-                CourseInstancesPerCourse = 20,
-                EnrollmentsPerStudent = 10
+                CoursesCount = 1000,
+                CourseInstancesPerCourse = 10,
+                EnrollmentsPerStudent = 1
             };
             
             // DataGeneratorConfig dataGeneratorConfig = new()
@@ -38,7 +38,7 @@ namespace DatabasePerformanceTests
 
             string databaseName = "testdb_latest_big";
             
-            string method = args.Length > 0 ? args[0] : "analyze";
+            string method = args.Length > 0 ? args[0] : "create";
             switch (method.ToLower())
             {
                 case "create":

@@ -20,42 +20,41 @@ public class TestsRunner
         
         _testDefinitions = new()
         {
-            new TestDefinition(
-                OperationType.SelectStudentsOrderedById,
-                async (dataSize, parameters) =>
-                {
-                    await operations.SelectStudentsOrderedByIdAsync(dataSize);
-                },
-                10
-            ),
-            new TestDefinition(
-                OperationType.SelectStudentsOrderedById,
-                async (dataSize, parameters) =>
-                {
-                    await operations.SelectStudentsOrderedByIdAsync(dataSize);
-                },
-                100
-            ),
             // new TestDefinition(
-            //     OperationType.SelectEnrollmentsOrderedById,
-            //     async parameters =>
+            //     OperationType.SelectStudentsOrderedById,
+            //     async (dataSize, parameters) =>
             //     {
-            //         int limit = (int)parameters["Limit"];
-            //         await operations.SelectEnrollmentsOrderedByIdAsync(limit);
+            //         await operations.SelectStudentsOrderedByIdAsync(dataSize);
             //     },
-            //     new Dictionary<string, object> { { "Limit", 100_000 } },
-            //     100_000
+            //     dataSize:10
             // ),
             // new TestDefinition(
-            //     OperationType.SelectEnrollmentsOrderedById,
-            //     async parameters =>
+            //     OperationType.SelectStudentsOrderedById,
+            //     async (dataSize, parameters) =>
             //     {
-            //         int limit = (int)parameters["Limit"];
-            //         await operations.SelectEnrollmentsOrderedByIdAsync(limit);
+            //         await operations.SelectStudentsOrderedByIdAsync(dataSize);
             //     },
-            //     new Dictionary<string, object> { { "Limit", 1000 } },
-            //     100
+            //     dataSize:100
             // ),
+            new TestDefinition(
+                OperationType.SelectEnrollmentsFilteredByIsActive,
+                async (dataSize, parameters) =>
+                {
+                    var isActive = (bool)parameters["IsActive"];
+                    await operations.SelectEnrollmentsFilteredByIsActiveAsync(isActive);
+                },
+                parameters:new Dictionary<string, object> { { "IsActive", true } },
+                dataSize:null
+            ),
+            new TestDefinition(
+                OperationType.SelectEnrollmentsOrderedById,
+                async (dataSize, parameters) =>
+                {
+                    if (dataSize is null) throw new ArgumentNullException(nameof(dataSize));
+                    await operations.SelectEnrollmentsOrderedByIdAsync((int)dataSize);
+                },
+                dataSize:10
+            ),
         };
     }
     

@@ -22,6 +22,7 @@ public static class MainMethods
             await dbContext.CreateDatabaseAsync();
             await dbContext.CreateTablesAsync();
             await dbContext.PopulateDatabaseAsync(generatedData);
+            await dbContext.CreateIndexesAsync();
         }
     }
 
