@@ -8,7 +8,7 @@ namespace DatabasePerformanceTests.Utils.Files;
 public class TestResultsManager
 {
     private static readonly string FILE_NAME_DATE_FORMAT = "yyyy_MM_dd_HH_mm_ss";
-    public static void WriteResultsToFile(List<TestResult> results, string outputDirectory)
+    public static void WriteResultsToFile(List<OperationResults> results, string outputDirectory)
     {
         string fileName = $"results_{DateTime.Now.ToString(FILE_NAME_DATE_FORMAT)}";
         string fileDirectory = GetFileDirectory(outputDirectory);
@@ -25,7 +25,7 @@ public class TestResultsManager
         Logger.Log($"Results written to {filePath}");
     }
     
-    public static List<TestResult> ReadResultsFromFile(string outputDirectory)
+    public static List<OperationResults> ReadResultsFromFile(string outputDirectory)
     {
         var fileDirectory = GetFileDirectory(outputDirectory);
         var newestFileName = GetNewestResultsFileName(outputDirectory);
@@ -38,7 +38,7 @@ public class TestResultsManager
         }
         
         var json = File.ReadAllText(filePath);
-        return JsonSerializer.Deserialize<List<TestResult>>(json, new JsonSerializerOptions
+        return JsonSerializer.Deserialize<List<OperationResults>>(json, new JsonSerializerOptions
         {
             Converters = { new JsonStringEnumConverter() }
         });

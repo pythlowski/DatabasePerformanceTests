@@ -11,10 +11,10 @@ public interface IDbOperations
     Task<List<StudentBase>> SelectStudentsOrderedByIdAsync(int limit);
     Task<List<EnrollmentResult>> SelectEnrollmentsOrderedByIdAsync(int limit);
     Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByIsActiveAsync(bool isActive);
-    // Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByEnrollmentDateAsync(DateTime dateFrom, DateTime dateTo);
-    // Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByBudgetAsync(long valueFrom, long valueTo);
-    // Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByStudentsLastNameAsync(string lastNameSearchText);
-    // Task<List<EnrollmentResult>> SelectEnrollmentsWithManyFiltersAsync(bool isActive, DateTime dateFrom, DateTime dateTo, long valueFrom, long valueTo, string lastNameSearchText);
+    Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByEnrollmentDateAsync(DateTime dateFrom, DateTime dateTo);
+    Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByBudgetAsync(int valueFrom, int valueTo);
+    Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByStudentsLastNameAsync(string lastNameSearchText);
+    // Task<List<EnrollmentResult>> SelectEnrollmentsWithManyFiltersAsync(bool isActive, DateTime dateFrom, DateTime dateTo, int valueFrom, int valueTo, string lastNameSearchText);
     // Task<List<EnrollmentResult>> SelectEnrollmentsWithPaginationAsync(int pageSize, int pageNumber);
     // Task<List<EnrollmentResult>> SelectEnrollmentsWithManySortParametersAsync(int limit);
 }

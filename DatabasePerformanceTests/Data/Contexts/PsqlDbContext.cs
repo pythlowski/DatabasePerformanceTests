@@ -230,6 +230,7 @@ public class PsqlDbContext : AbstractDbContext, ISqlDbContext
             CREATE INDEX ""idxEnrollmentsStudentCourse"" ON ""Enrollments"" (""StudentId"", ""CourseInstanceId"");
         ", connection);
         await command.ExecuteNonQueryAsync();
+        Logger.Log("PostgreSQL Finished creating indexes");
     }
 
     public static string EscapeString(string input)

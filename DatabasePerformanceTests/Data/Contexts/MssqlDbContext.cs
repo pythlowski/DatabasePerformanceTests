@@ -305,6 +305,7 @@ public class MssqlDbContext : AbstractDbContext, ISqlDbContext
             CREATE INDEX idxEnrollmentsStudentCourse ON Enrollments (StudentId, CourseInstanceId);
         ", connection);
         await command.ExecuteNonQueryAsync();
+        Logger.Log("MSSQL indexes created.");
     }
 
     public override async Task DropDatabaseAsync()

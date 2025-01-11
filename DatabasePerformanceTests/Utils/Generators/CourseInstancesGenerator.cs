@@ -12,7 +12,7 @@ public class CourseInstancesGenerator
             .RuleFor(ci => ci.CourseId, f => f.Random.Number(1, coursesCount))
             .RuleFor(ci => ci.InstructorId, f => f.Random.Number(1, instructorsCount))
             .RuleFor(ci => ci.AcademicYear, f => f.Date.Past(instancesPerCourse).Year)
-            .RuleFor(ci => ci.Budget, f => f.Random.Number(0, 100000000));
+            .RuleFor(ci => ci.Budget, f => f.Random.Number(0, 100_000_000));
 
         return faker.Generate(coursesCount * instancesPerCourse);
     }

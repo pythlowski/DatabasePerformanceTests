@@ -3,6 +3,7 @@ using DatabasePerformanceTests.Data.Models.Mongo;
 using DatabasePerformanceTests.Utils;
 using DatabasePerformanceTests.Utils.Config.Enums;
 using DatabasePerformanceTests.Utils.Generators.Models;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -60,7 +61,8 @@ public class MongoDbContext : AbstractDbContext
 
         var enrollmentsCollection = _testDatabase.GetCollection<MongoEnrollment>("enrollments");
         var denormalizedEnrollments = GetDenormalizedEnrollments(data).ToList();
-
+        Logger.Log("MongoDB Finished preparing denormalized enrollments");
+        
         Logger.Log("MongoDB Inserting course instances...");
         var bulkOps = new List<WriteModel<MongoEnrollment>>();
         foreach(var mongoEnrollment in denormalizedEnrollments)
@@ -68,55 +70,50 @@ public class MongoDbContext : AbstractDbContext
             bulkOps.Add(new InsertOneModel<MongoEnrollment>(mongoEnrollment));
         }
         await enrollmentsCollection.BulkWriteAsync(bulkOps);
-
-        // await courseInstancesCollection.InsertManyAsync(denormalizedCourseInstances);
-        Logger.Log("MongoDB Finished inserting course instances.");
-        
-        
+        Logger.Log("MongoDB Finished inserting enrollments.");
     }
 
     public override async Task CreateIndexesAsync()
     {
-        // var collection = _testDatabase.GetCollection<MongoCourseInstance>("courseInstances");
-        //
-        // var budgetIndex = new CreateIndexModel<MongoCourseInstance>(
-        //     Builders<MongoCourseInstance>.IndexKeys.Ascending(x => x.Budget)
-        // );
-        //
-        // var enrolledStudentsComplexIndex = new CreateIndexModel<MongoCourseInstance>(
-        //     Builders<MongoCourseInstance>.IndexKeys
-        //         .Ascending("EnrolledStudents.IsActive")
-        //         .Ascending("EnrolledStudents.LastName")
-        //         .Ascending("EnrolledStudents.EnrollmentDate")
-        // );
-        //
-        // var enrolledStudentsIsActiveIndex = new CreateIndexModel<MongoCourseInstance>(
-        //     Builders<MongoCourseInstance>.IndexKeys
-        //         .Ascending("EnrolledStudents.IsActive")
-        // );
-        //
-        // var enrolledStudentsLastNameIndex = new CreateIndexModel<MongoCourseInstance>(
-        //     Builders<MongoCourseInstance>.IndexKeys
-        //         .Text("EnrolledStudents.LastName")
-        // );
-        //
-        // var enrolledStudentsEnrollmentDateIndex = new CreateIndexModel<MongoCourseInstance>(
-        //     Builders<MongoCourseInstance>.IndexKeys
-        //         .Ascending("EnrolledStudents.EnrollmentDate")
-        // );
-        //
-        // await collection.Indexes.CreateOneAsync(budgetIndex);
-        // await collection.Indexes.CreateOneAsync(enrolledStudentsComplexIndex);
-        // await collection.Indexes.CreateOneAsync(enrolledStudentsIsActiveIndex);
-        // await collection.Indexes.CreateOneAsync(enrolledStudentsLastNameIndex);
-        // await collection.Indexes.CreateOneAsync(enrolledStudentsEnrollmentDateIndex);
+        var collection = _testDatabase.GetCollection<MongoEnrollment>("enrollments");
+        
+        var enrollmentDateIndex = new CreateIndexModel<MongoEnrollment>(
+            Builders<MongoEnrollment>.IndexKeys.Ascending(x => x.EnrollmentDate)
+        );
+        await collection.Indexes.CreateOneAsync(enrollmentDateIndex);
+
+        var studentComplexIndex = new CreateIndexModel<MongoEnrollment>(
+            Builders<MongoEnrollment>.IndexKeys
+                .Ascending("Student.IsActive")
+                .Ascending("Student.LastName")
+        );
+        await collection.Indexes.CreateOneAsync(studentComplexIndex);
+
+        var studentIsActiveIndex = new CreateIndexModel<MongoEnrollment>(
+            Builders<MongoEnrollment>.IndexKeys
+                .Ascending("Student.IsActive")
+        );
+        await collection.Indexes.CreateOneAsync(studentIsActiveIndex);
+
+        var studentLastNameIndex = new CreateIndexModel<MongoEnrollment>(
+            Builders<MongoEnrollment>.IndexKeys
+                .Text("Student.LastName")
+        );
+        await collection.Indexes.CreateOneAsync(studentLastNameIndex);
+
+        var courseBudgetIndex = new CreateIndexModel<MongoEnrollment>(
+            Builders<MongoEnrollment>.IndexKeys
+                .Ascending("Course.Budget")
+        );
+        await collection.Indexes.CreateOneAsync(courseBudgetIndex);
+        Logger.Log("MongoDB Finished creating indexes");
     }
 
     private IEnumerable<MongoEnrollment> GetDenormalizedEnrollments(GeneratedData data)
     {
         foreach (var enrollment in data.Enrollments)
         {
-            var student = data.Students.First(s => s.Id == enrollment.StudentId);
+            var student = data.EnrollmentIdToStudentMap[enrollment.Id];
             var courseInstance = data.CourseInstances.First(c => c.Id == enrollment.CourseInstanceId);
             var course = data.Courses.First(c => c.Id == courseInstance.CourseId);
             yield return MongoEnrollment.FromDomain(enrollment, student, courseInstance, course);

@@ -28,16 +28,11 @@ public static class MainMethods
 
     public static async Task RunTests(string databaseName, TestsConfig testsConfig, DatabaseConfig[] databaseConfigs)
     {
-        var testsResults = new List<TestResult>();
-
         var factory = new DbContextFactory();
-        foreach (var config in databaseConfigs)
-        {
-            var dbContext = factory.CreateDbContext(config.System, config.ConnectionString, databaseName);
-            var testsRunner = new TestsRunner(dbContext, testsConfig.Iterations);
-            var results = await testsRunner.RunTestsAsync();
-            testsResults.AddRange(results);
-        }
+        var dbContexts = databaseConfigs.Select(config =>
+            factory.CreateDbContext(config.System, config.ConnectionString, databaseName)).ToList();
+        var testsRunner = new TestsRunner(dbContexts, testsConfig.Iterations);
+        var testsResults = await testsRunner.RunTestsAsync();
         
         TestResultsManager.WriteResultsToFile(
             results:testsResults,

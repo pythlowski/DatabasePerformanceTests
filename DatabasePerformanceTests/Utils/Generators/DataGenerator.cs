@@ -10,7 +10,7 @@ public class DataGenerator(DataGeneratorConfig config)
         var instructors = new InstructorsGenerator().Generate(config.InstructorsCount);
         var courses = new CoursesGenerator().Generate(config.CoursesCount);
         var courseInstances = new CourseInstancesGenerator().Generate(config.CoursesCount, config.InstructorsCount, config.CourseInstancesPerCourse);
-        var (enrollments, courseInstanceStudentMap) = new EnrollmentsGenerator().Generate(students, config.CoursesCount * config.CourseInstancesPerCourse, config.EnrollmentsPerStudent);
+        var (enrollments, enrollmentIdToStudentMap) = new EnrollmentsGenerator().Generate(students, config.CoursesCount * config.CourseInstancesPerCourse, config.EnrollmentsPerStudent);
         
         return new GeneratedData
         {
@@ -19,7 +19,7 @@ public class DataGenerator(DataGeneratorConfig config)
             Courses = courses,
             CourseInstances = courseInstances,
             Enrollments = enrollments,
-            CourseInstanceStudentMap = courseInstanceStudentMap
+            EnrollmentIdToStudentMap = enrollmentIdToStudentMap
         };
     }
 }

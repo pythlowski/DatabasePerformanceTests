@@ -20,7 +20,7 @@ namespace DatabasePerformanceTests
             
             // DataGeneratorConfig dataGeneratorConfig = new()
             // {
-            //     StudentsCount = 10_000_00,
+            //     StudentsCount = 1_000_000,
             //     InstructorsCount = 500,
             //     CoursesCount = 1000,
             //     CourseInstancesPerCourse = 10,
@@ -36,7 +36,7 @@ namespace DatabasePerformanceTests
                 EnrollmentsPerStudent = 10
             };
 
-            string databaseName = "testdb4";
+            string databaseName = "testdb_small";
             
             string method = args.Length > 0 ? args[0] : "tests";
             switch (method.ToLower())

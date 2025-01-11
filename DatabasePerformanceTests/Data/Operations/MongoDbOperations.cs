@@ -9,23 +9,6 @@ namespace DatabasePerformanceTests.Data.Operations;
 
 public class MongoDbOperations(MongoDbContext context) : IDbOperations
 {
-    private List<BsonDocument> GetBaseEnrollmentsPipeline(BsonDocument? matchFilter = null)
-    {
-        var pipeline = new List<BsonDocument>
-        {
-            matchFilter != null ? new BsonDocument("$match", matchFilter) : null,
-            new("$project", new BsonDocument
-            {
-                { "_id", 0 },
-                { "EnrollmentId", "$_id" },
-                { "StudentFirstName", "$Student.FirstName" },
-                { "StudentLastName", "$Student.LastName" }
-            })
-        };
-        pipeline.RemoveAll(stage => stage == null);
-        return pipeline;
-    }
-    
     public Task InsertEnrollmentsAsync(IEnumerable<Enrollment> enrollments)
     {
         throw new NotImplementedException();
@@ -54,43 +37,75 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
 
     public async Task<List<EnrollmentResult>> SelectEnrollmentsOrderedByIdAsync(int limit)
     {
-        var collection = context.GetCollection<MongoCourseInstance>("enrollments");
-        var pipeline = GetBaseEnrollmentsPipeline();
-        pipeline.Add(new ("$sort", new BsonDocument("_id", 1)));
-
-        var results = await collection.Aggregate<EnrollmentResult>(pipeline).ToListAsync();
-        return results;
+        var collection = context.GetCollection<MongoEnrollment>("enrollments");
+        var data = await collection
+            .Find(Builders<MongoEnrollment>.Filter.Empty)
+            .Sort(Builders<MongoEnrollment>.Sort.Ascending(x => x.Id))
+            .Limit(limit)
+            .Project(GetEnrollmentProjection())
+            .ToListAsync();
+        return data;
     }
 
     public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByIsActiveAsync(bool isActive)
     {
-        var collection = context.GetCollection<MongoCourseInstance>("enrollments");
-        BsonDocument matchFilter = new()
-        {
-            { "Student.IsActive", isActive }
-        };
-        var pipeline = GetBaseEnrollmentsPipeline(matchFilter);
-        var results = await collection.Aggregate<EnrollmentResult>(pipeline).ToListAsync();
-        return results;
+        var collection = context.GetCollection<MongoEnrollment>("enrollments");
+        var data = await collection
+            .Find(
+                Builders<MongoEnrollment>.Filter.Eq(x => x.Student.IsActive, true)
+            )
+            .Project(GetEnrollmentProjection())
+            .ToListAsync();
+        return data;
     }
 
-    public Task SelectEnrollmentsFilteredByEnrollmentDateAsync(DateTime dateFrom, DateTime dateTo)
+    public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByEnrollmentDateAsync(DateTime dateFrom, DateTime dateTo)
     {
-        throw new NotImplementedException();
+        var collection = context.GetCollection<MongoEnrollment>("enrollments");
+        var data = await collection
+            .Find(
+                Builders<MongoEnrollment>.Filter.And(
+                    Builders<MongoEnrollment>.Filter.Gte(x => x.EnrollmentDate, dateFrom),
+                    Builders<MongoEnrollment>.Filter.Lte(x => x.EnrollmentDate, dateTo)
+                )
+                )
+            .Project(GetEnrollmentProjection())
+            .ToListAsync();
+        return data;
     }
 
-    public Task SelectEnrollmentsFilteredByBudgetAsync(long valueFrom, long valueTo)
+    public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByBudgetAsync(int valueFrom, int valueTo)
     {
-        throw new NotImplementedException();
+        var collection = context.GetCollection<MongoEnrollment>("enrollments");
+        var data = await collection
+            .Find(
+                Builders<MongoEnrollment>.Filter.And(
+                    Builders<MongoEnrollment>.Filter.Gte(x => x.Course.Budget, valueFrom),
+                    Builders<MongoEnrollment>.Filter.Lte(x => x.Course.Budget, valueTo)
+                )
+            )
+            .Project(GetEnrollmentProjection())
+            .ToListAsync();
+        return data;
     }
 
-    public Task SelectEnrollmentsFilteredByStudentsLastNameAsync(string lastNameSearchText)
+    public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByStudentsLastNameAsync(string lastNameSearchText)
     {
-        throw new NotImplementedException();
+        var collection = context.GetCollection<MongoEnrollment>("enrollments");
+        var data = await collection
+            .Find(
+                Builders<MongoEnrollment>.Filter.Regex(
+                    x => x.Student.LastName, 
+                    new BsonRegularExpression(lastNameSearchText, "i")
+                )
+            )
+            .Project(GetEnrollmentProjection())
+            .ToListAsync();
+        return data;
     }
 
-    public Task SelectEnrollmentsWithManyFiltersAsync(bool isActive, DateTime dateFrom, DateTime dateTo, long valueFrom,
-        long valueTo, string lastNameSearchText)
+    public Task SelectEnrollmentsWithManyFiltersAsync(bool isActive, DateTime dateFrom, DateTime dateTo, int valueFrom,
+        int valueTo, string lastNameSearchText)
     {
         throw new NotImplementedException();
     }
@@ -103,5 +118,15 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
     public Task SelectEnrollmentsWithManySortParametersAsync(int limit)
     {
         throw new NotImplementedException();
+    }
+    
+    private static ProjectionDefinition<MongoEnrollment, EnrollmentResult> GetEnrollmentProjection()
+    {
+        return Builders<MongoEnrollment>.Projection.Expression(enrollment => new EnrollmentResult
+        {
+            EnrollmentId = enrollment.Id,
+            StudentFirstName = enrollment.Student.FirstName,
+            StudentLastName = enrollment.Student.LastName,
+        });
     }
 }

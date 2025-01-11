@@ -83,29 +83,50 @@ public class PsqlDbOperations(PsqlDbContext context) : IDbOperations
     {
         string isActiveValue = isActive ? "True" : "False";
         string query = GetEnrollmentsQuery(
-            whereConditions:null, 
-            orderByClauses:new List<string>{ $"s.\"IsActive\" = {isActiveValue}" }, 
+            whereConditions:new List<string>{ $"s.\"IsActive\" = {isActiveValue}" }, 
+            orderByClauses:null, 
             limit:null);
         return await ExecuteEnrollmentsQueryAsync(query);
     }
 
-    public Task SelectEnrollmentsFilteredByEnrollmentDateAsync(DateTime dateFrom, DateTime dateTo)
+    public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByEnrollmentDateAsync(DateTime dateFrom, DateTime dateTo)
     {
-        throw new NotImplementedException();
+        string query = GetEnrollmentsQuery(
+            whereConditions:new List<string>
+            {
+                $"e.\"EnrollmentDate\" BETWEEN '{dateFrom:yyyy-MM-dd}' AND '{dateTo:yyyy-MM-dd}'",
+            }, 
+            orderByClauses:null, 
+            limit:null);
+        return await ExecuteEnrollmentsQueryAsync(query);    
     }
 
-    public Task SelectEnrollmentsFilteredByBudgetAsync(long valueFrom, long valueTo)
+    public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByBudgetAsync(int valueFrom, int valueTo)
     {
-        throw new NotImplementedException();
+        string query = GetEnrollmentsQuery(
+            whereConditions:new List<string>
+            {
+                $"ci.\"Budget\" BETWEEN {valueFrom} AND {valueTo}",
+            }, 
+            orderByClauses:null, 
+            limit:null);
+        return await ExecuteEnrollmentsQueryAsync(query);
     }
 
-    public Task SelectEnrollmentsFilteredByStudentsLastNameAsync(string lastNameSearchText)
+    public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByStudentsLastNameAsync(string lastNameSearchText)
     {
-        throw new NotImplementedException();
+        string query = GetEnrollmentsQuery(
+            whereConditions:new List<string>
+            {
+                $"s.\"LastName\" LIKE '%{lastNameSearchText}%'",
+            }, 
+            orderByClauses:null, 
+            limit:null);
+        return await ExecuteEnrollmentsQueryAsync(query);    
     }
 
-    public Task SelectEnrollmentsWithManyFiltersAsync(bool isActive, DateTime dateFrom, DateTime dateTo, long valueFrom,
-        long valueTo, string lastNameSearchText)
+    public Task SelectEnrollmentsWithManyFiltersAsync(bool isActive, DateTime dateFrom, DateTime dateTo, int valueFrom,
+        int valueTo, string lastNameSearchText)
     {
         throw new NotImplementedException();
     }

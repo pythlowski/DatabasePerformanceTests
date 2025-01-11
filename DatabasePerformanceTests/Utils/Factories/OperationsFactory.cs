@@ -5,7 +5,7 @@ namespace DatabasePerformanceTests.Utils.Factories;
 
 public class OperationsFactory
 {
-    public IDbOperations CreateOperationsFactory(AbstractDbContext dbContext)
+    public static IDbOperations CreateOperations(AbstractDbContext dbContext)
     {
         return dbContext switch
         {
