@@ -4,16 +4,33 @@ namespace DatabasePerformanceTests.Data.Models.Results;
 
 public class StudentDetailsResult : StudentBaseResult
 {
+    public StudentDetailsResult(string mongoId, string firstName, string lastName, DateTime birthDate, int admissionYear, bool isActive) : base(mongoId, firstName, lastName)
+    {
+        BirthDate = birthDate;
+        AdmissionYear = admissionYear;
+        IsActive = isActive;
+    }
+
+    public StudentDetailsResult(int id, string firstName, string lastName, DateTime birthDate, int admissionYear, bool isActive) : base(id, firstName, lastName)
+    {
+        BirthDate = birthDate;
+        AdmissionYear = admissionYear;
+        IsActive = isActive;
+    }
+
     public DateTime BirthDate { get; set; }
     public int AdmissionYear { get; set; }
     public bool IsActive { get; set; }
     
     public static StudentDetailsResult FromMongo(MongoStudent student)
     {
-        var baseStudent = (StudentDetailsResult)StudentBaseResult.FromMongo(student); // TODO make it out of constructors
-        baseStudent.BirthDate = student.BirthDate;
-        baseStudent.AdmissionYear = student.AdmissionYear;
-        baseStudent.IsActive = student.IsActive;
-        return baseStudent;
+        return new StudentDetailsResult(
+            student.Id,
+            student.FirstName,
+            student.LastName,
+            student.BirthDate,
+            student.AdmissionYear,
+            student.IsActive
+        );
     }
 }

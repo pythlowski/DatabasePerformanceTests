@@ -95,12 +95,11 @@ public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
     public async Task<List<StudentBaseResult>> SelectStudentsOrderedByIdAsync(int limit)
     {
         var data = await context.ExecuteReaderAsync($"SELECT TOP {limit} StudentId, FirstName, LastName FROM Students ORDER BY StudentId", true);
-        return data.Select(row => new StudentBaseResult
-        {
-            Id = (int)row["StudentId"],
-            FirstName = (string)row["FirstName"],
-            LastName = (string)row["LastName"]
-        }).ToList();
+        return data.Select(row => new StudentBaseResult(
+            (int)row["StudentId"],
+            (string)row["FirstName"],
+            (string)row["LastName"]
+        )).ToList();
     }
 
     public async Task<StudentDetailsResult> SelectStudentByIdAsync(int id)
@@ -110,15 +109,14 @@ public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
             FROM Students WHERE StudentId = {id}";
         var data = await context.ExecuteReaderAsync(query, true);
         var student = data.FirstOrDefault();
-        return new StudentDetailsResult
-        {
-            Id = (int)student["StudentId"],
-            FirstName = (string)student["FirstName"],
-            LastName = (string)student["LastName"],
-            BirthDate = (DateTime)student["BirthDate"],
-            AdmissionYear = (int)student["AdmissionYear"],
-            IsActive = (bool)student["IsActive"]
-        };
+        return new StudentDetailsResult(
+            (int)student["StudentId"],
+            (string)student["FirstName"],
+            (string)student["LastName"],
+            (DateTime)student["BirthDate"],
+            (int)student["AdmissionYear"],
+            (bool)student["IsActive"]
+        );
     }
 
     public async Task<CourseInstanceBaseResult> SelectCourseInstancesByStudentIdAsync(int studentId)
