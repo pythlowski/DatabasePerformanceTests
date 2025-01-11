@@ -2,9 +2,14 @@ namespace DatabasePerformanceTests.Data.Operations;
 
 public enum OperationType
 {
-    InsertEnrollments,
+    BulkInsertEnrollments,
+    InsertEnrollmentsOnEmptyTable,
     DeleteEnrollments,
+    DeleteEnrollmentsOnEmptyTable,
     UpdateEnrollments,
+    UpdateEnrollmentsOnEmptyTable,
+    SelectStudentById,
+    SelectEnrollmentsByStudentId,
     SelectStudentsOrderedById,
     SelectEnrollmentsOrderedById,
     SelectEnrollmentsFilteredByIsActive,

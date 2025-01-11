@@ -1,7 +1,14 @@
 using System.Diagnostics;
 using DatabasePerformanceTests.Data.Contexts;
+using DatabasePerformanceTests.Data.Models;
+using DatabasePerformanceTests.Data.Models.Domain;
+using DatabasePerformanceTests.Data.Models.Mongo;
 using DatabasePerformanceTests.Data.Operations;
+using DatabasePerformanceTests.Data.Operations.Interfaces;
+using DatabasePerformanceTests.Utils.Config.Enums;
 using DatabasePerformanceTests.Utils.Factories;
+using DatabasePerformanceTests.Utils.Generators;
+using DatabasePerformanceTests.Utils.Generators.Models;
 using DatabasePerformanceTests.Utils.Tests.Models;
 
 namespace DatabasePerformanceTests.Utils.Tests;
@@ -13,16 +20,44 @@ public class TestsRunner
     List<AbstractDbContext> _contexts;
     private List<TestDefinition> _testDefinitions;
     private IDbOperations _operations;
-    public TestsRunner(List<AbstractDbContext> contexts, int iterations)
+    public TestsRunner(List<AbstractDbContext> contexts, DataGeneratorConfig generatorConfig, int iterations)
     {
         TEST_ITERATIONS = iterations;
         _contexts = contexts;
+        var dummyEnrollments = DummyEnrollmentsGenerator.GenerateDomain(generatorConfig, 100_000);
+        var dummyMongoEnrollments = DummyEnrollmentsGenerator.GenerateMongo( generatorConfig, 100_000);
         
         _testDefinitions = new()
         {
             new TestDefinition(
+                OperationType.BulkInsertEnrollments,
+                async (databaseSystem, dataSize, parameters) =>
+                {
+                    if (dataSize is null) throw new ArgumentNullException(nameof(dataSize));
+
+                    List<IEnrollment> enrollments;
+                    if (databaseSystem == DatabaseSystem.Mongo)
+                    {
+                        enrollments = ((List<MongoEnrollment>)parameters["MongoEnrollments"])
+                            .Take((int)dataSize).Cast<IEnrollment>().ToList();
+                    }
+                    else
+                    {
+                        enrollments = ((List<Enrollment>)parameters["Enrollments"])
+                            .Take((int)dataSize).Cast<IEnrollment>().ToList();
+                    }
+                    await _operations.BulkInsertAsync(enrollments);
+                },
+                parameters:new Dictionary<string, object>
+                {
+                    { "Enrollments", dummyEnrollments }, 
+                    { "MongoEnrollments", dummyMongoEnrollments }
+                },
+                dataSizes:new List<int?>{ 100, 1000, 10_000, 100_000 }
+            ),
+            new TestDefinition(
                 OperationType.SelectStudentsOrderedById,
-                async (dataSize, parameters) =>
+                async (databaseSystem, dataSize, parameters) =>
                 {
                     if (dataSize is null) throw new ArgumentNullException(nameof(dataSize));
                     await _operations.SelectStudentsOrderedByIdAsync((int)dataSize);
@@ -31,7 +66,7 @@ public class TestsRunner
             ),
             new TestDefinition(
                 OperationType.SelectEnrollmentsOrderedById,
-                async (dataSize, parameters) =>
+                async (databaseSystem, dataSize, parameters) =>
                 {
                     if (dataSize is null) throw new ArgumentNullException(nameof(dataSize));
                     await _operations.SelectEnrollmentsOrderedByIdAsync((int)dataSize);
@@ -40,7 +75,7 @@ public class TestsRunner
             ),
             new TestDefinition(
                 OperationType.SelectEnrollmentsFilteredByIsActive,
-                async (dataSize, parameters) =>
+                async (databaseSystem, dataSize, parameters) =>
                 {
                     var isActive = (bool)parameters["IsActive"];
                     await _operations.SelectEnrollmentsFilteredByIsActiveAsync(isActive);
@@ -49,7 +84,7 @@ public class TestsRunner
             ),
             new TestDefinition(
                 OperationType.SelectEnrollmentsFilteredByEnrollmentDate,
-                async (dataSize, parameters) =>
+                async (databaseSystem, dataSize, parameters) =>
                 {
                     var dateFrom = (DateTime)parameters["DateFrom"];
                     var dateTo = (DateTime)parameters["DateTo"];
@@ -63,7 +98,7 @@ public class TestsRunner
             ),
             new TestDefinition(
                 OperationType.SelectEnrollmentsFilteredByBudget,
-                async (dataSize, parameters) =>
+                async (databaseSystem, dataSize, parameters) =>
                 {
                     var valueFrom = (int)parameters["ValueFrom"];
                     var valueTo = (int)parameters["ValueTo"];
@@ -77,7 +112,7 @@ public class TestsRunner
             ),
             new TestDefinition(
                 OperationType.SelectEnrollmentsFilteredByStudentsLastName,
-                async (dataSize, parameters) =>
+                async (databaseSystem, dataSize, parameters) =>
                 {
                     var searchText = (string)parameters["SearchText"];
                     await _operations.SelectEnrollmentsFilteredByStudentsLastNameAsync(searchText);
@@ -113,7 +148,7 @@ public class TestsRunner
                             await context.StartTransactionAsync();
 
                             var stopwatch = Stopwatch.StartNew();
-                            await test.TestFunction(dataSize, test.Parameters);
+                            await test.TestFunction(context.DatabaseSystem, dataSize, test.Parameters);
                             stopwatch.Stop();
 
                             systemResults.RegisterTime((int)stopwatch.ElapsedMilliseconds);

@@ -5,7 +5,7 @@ namespace DatabasePerformanceTests.Utils.Generators;
 
 public class StudentsGenerator
 {
-    public List<Student> Generate(int count)
+    public static List<Student> Generate(int count)
     {
         var faker = new Faker<Student>()
             .RuleFor(s => s.Id, f => f.IndexFaker + 1)

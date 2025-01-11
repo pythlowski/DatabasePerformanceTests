@@ -27,12 +27,12 @@ public static class MainMethods
         }
     }
 
-    public static async Task RunTests(string databaseName, TestsConfig testsConfig, DatabaseConfig[] databaseConfigs)
+    public static async Task RunTests(string databaseName, TestsConfig testsConfig, DatabaseConfig[] databaseConfigs, DataGeneratorConfig dataGeneratorConfig)
     {
         var factory = new DbContextFactory();
         var dbContexts = databaseConfigs.Select(config =>
             factory.CreateDbContext(config.System, config.ConnectionString, databaseName)).ToList();
-        var testsRunner = new TestsRunner(dbContexts, testsConfig.Iterations);
+        var testsRunner = new TestsRunner(dbContexts, dataGeneratorConfig, testsConfig.Iterations);
         var testsResults = await testsRunner.RunTestsAsync();
         
         TestResultsManager.WriteResultsToFile(

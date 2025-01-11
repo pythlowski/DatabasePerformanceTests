@@ -3,7 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace DatabasePerformanceTests.Data.Models.Mongo;
 
-public class MongoEnrollment
+public class MongoEnrollment : IEnrollment
 {
     [BsonId]
     public int Id { get; set; }

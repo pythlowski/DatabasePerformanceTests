@@ -42,6 +42,9 @@ public class SystemResults
     }
     public void CalculateResultParameters()
     {
+        if (!ExecutionTimesMilliseconds.Any())
+            return;
+        
         Average = ExecutionTimesMilliseconds.Average();
         Median = GetMedian(ExecutionTimesMilliseconds);
         Minimum = ExecutionTimesMilliseconds.Min();

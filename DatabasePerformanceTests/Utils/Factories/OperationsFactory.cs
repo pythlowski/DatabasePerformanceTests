@@ -1,5 +1,6 @@
 using DatabasePerformanceTests.Data.Contexts;
 using DatabasePerformanceTests.Data.Operations;
+using DatabasePerformanceTests.Data.Operations.Interfaces;
 
 namespace DatabasePerformanceTests.Utils.Factories;
 

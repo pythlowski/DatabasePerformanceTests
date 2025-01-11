@@ -1,6 +1,10 @@
+using System.Data;
+using System.Globalization;
 using DatabasePerformanceTests.Data.Contexts;
+using DatabasePerformanceTests.Data.Models;
 using DatabasePerformanceTests.Data.Models.Domain;
 using DatabasePerformanceTests.Data.Models.Results;
+using DatabasePerformanceTests.Data.Operations.Interfaces;
 using Microsoft.Data.SqlClient;
 
 namespace DatabasePerformanceTests.Data.Operations;
@@ -32,20 +36,45 @@ public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
         ";  
     }
 
-    private async Task<List<EnrollmentResult>> ExecuteEnrollmentsQueryAsync(string query)
+    private async Task<List<EnrollmentBaseResult>> ExecuteEnrollmentsQueryAsync(string query)
     {
         var data = await context.ExecuteReaderAsync(query:query, useCurrentTransaction:true);
-        return data.Select(row => new EnrollmentResult
+        return data.Select(row => new EnrollmentBaseResult
         {
             EnrollmentId = (int)row["EnrollmentId"],
             StudentFirstName = (string)row["StudentFirstName"],
             StudentLastName = (string)row["StudentLastName"]
         }).ToList();
     }
-    
-    public Task InsertEnrollmentsAsync(IEnumerable<Enrollment> enrollments)
+
+    public async Task BulkInsertAsync(List<IEnrollment> data)
     {
-        throw new NotImplementedException();
+        var enrollmentTable = new DataTable();
+        enrollmentTable.Columns.Add("EnrollmentId", typeof(int));
+        enrollmentTable.Columns.Add("StudentId", typeof(int));
+        enrollmentTable.Columns.Add("CourseInstanceId", typeof(int));
+        enrollmentTable.Columns.Add("EnrollmentDate", typeof(DateTime));
+        enrollmentTable.Columns.Add("Grade", typeof(decimal));
+
+        foreach (var element in data)
+        {
+            var enrollment = (Enrollment)element;
+            enrollmentTable.Rows.Add(enrollment.Id, enrollment.StudentId, enrollment.CourseInstanceId,
+                enrollment.EnrollmentDate, enrollment.Grade);
+        }
+        
+        using var bulkCopy = new SqlBulkCopy(context.GetTransactionConnection(), SqlBulkCopyOptions.Default, context.GetTransaction())
+        {
+            DestinationTableName = "Enrollments"
+        };
+
+        bulkCopy.ColumnMappings.Add("EnrollmentId", "EnrollmentId");
+        bulkCopy.ColumnMappings.Add("StudentId", "StudentId");
+        bulkCopy.ColumnMappings.Add("CourseInstanceId", "CourseInstanceId");
+        bulkCopy.ColumnMappings.Add("EnrollmentDate", "EnrollmentDate");
+        bulkCopy.ColumnMappings.Add("Grade", "Grade");
+
+        await bulkCopy.WriteToServerAsync(enrollmentTable);
     }
 
     public Task DeleteEnrollmentsAsync(int count)
@@ -58,10 +87,10 @@ public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
         throw new NotImplementedException();
     }
 
-    public async Task<List<StudentBase>> SelectStudentsOrderedByIdAsync(int limit)
+    public async Task<List<StudentBaseResult>> SelectStudentsOrderedByIdAsync(int limit)
     {
         var data = await context.ExecuteReaderAsync($"SELECT TOP {limit} StudentId, FirstName, LastName FROM Students ORDER BY StudentId", true);
-        return data.Select(row => new StudentBase
+        return data.Select(row => new StudentBaseResult
         {
             Id = (int)row["StudentId"],
             FirstName = (string)row["FirstName"],
@@ -69,7 +98,7 @@ public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
         }).ToList();
     }
 
-    public async Task<List<EnrollmentResult>> SelectEnrollmentsOrderedByIdAsync(int limit)
+    public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsOrderedByIdAsync(int limit)
     {
         string query = GetEnrollmentsQuery(
             whereConditions:null, 
@@ -78,7 +107,7 @@ public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
         return await ExecuteEnrollmentsQueryAsync(query);
     }
 
-    public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByIsActiveAsync(bool isActive)
+    public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsFilteredByIsActiveAsync(bool isActive)
     {
         string isActiveValue = isActive ? "1" : "0";
         string query = GetEnrollmentsQuery(
@@ -88,7 +117,7 @@ public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
         return await ExecuteEnrollmentsQueryAsync(query);
     }
 
-    public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByEnrollmentDateAsync(DateTime dateFrom, DateTime dateTo)
+    public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsFilteredByEnrollmentDateAsync(DateTime dateFrom, DateTime dateTo)
     {
         string query = GetEnrollmentsQuery(
             whereConditions:new List<string>
@@ -99,7 +128,7 @@ public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
             limit:null);
         return await ExecuteEnrollmentsQueryAsync(query);       }
 
-    public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByBudgetAsync(int valueFrom, int valueTo)
+    public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsFilteredByBudgetAsync(int valueFrom, int valueTo)
     {
         string query = GetEnrollmentsQuery(
             whereConditions:new List<string>
@@ -111,7 +140,7 @@ public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
         return await ExecuteEnrollmentsQueryAsync(query);    
     }
 
-    public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByStudentsLastNameAsync(string lastNameSearchText)
+    public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsFilteredByStudentsLastNameAsync(string lastNameSearchText)
     {
         string query = GetEnrollmentsQuery(
             whereConditions:new List<string>

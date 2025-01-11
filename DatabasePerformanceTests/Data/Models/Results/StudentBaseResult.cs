@@ -3,15 +3,15 @@ using DatabasePerformanceTests.Data.Models.Mongo;
 
 namespace DatabasePerformanceTests.Data.Models.Results;
 
-public class StudentBase
+public class StudentBaseResult
 {
     public int Id { get; set; }
     public string FirstName { get; set; }
     public string LastName { get; set; }
 
-    public static StudentBase FromMongo(MongoStudent student)
+    public static StudentBaseResult FromMongo(MongoStudent student)
     {
-        return new StudentBase
+        return new StudentBaseResult
         {
             Id = int.Parse(student.Id.Split('-')[1]),
             FirstName = student.FirstName,
@@ -19,9 +19,9 @@ public class StudentBase
         };
     }
 
-    public static StudentBase FromDomain(Student student)
+    public static StudentBaseResult FromDomain(Student student)
     {
-        return new StudentBase
+        return new StudentBaseResult
         {
             Id = student.Id,
             FirstName = student.FirstName,

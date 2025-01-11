@@ -2,15 +2,15 @@ using DatabasePerformanceTests.Data.Models.Mongo;
 
 namespace DatabasePerformanceTests.Data.Models.Results;
 
-public class EnrollmentResult
+public class EnrollmentBaseResult
 {
     public int EnrollmentId { get; set; }
     public string StudentFirstName { get; set; }
     public string StudentLastName { get; set; }
 
-    public static EnrollmentResult FromMongo(MongoEnrollment enrollment)
+    public static EnrollmentBaseResult FromMongo(MongoEnrollment enrollment)
     {
-        return new EnrollmentResult
+        return new EnrollmentBaseResult
         {
             EnrollmentId = enrollment.Id,
             StudentFirstName = enrollment.Student.FirstName,

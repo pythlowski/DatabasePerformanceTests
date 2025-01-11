@@ -286,4 +286,9 @@ public class PsqlDbContext : AbstractDbContext, ISqlDbContext
         _transactionConnection.Dispose();
         _transactionConnection = null;
     }
+    
+    public NpgsqlConnection GetTransactionConnection()
+    {
+        return _transactionConnection;
+    }
 }

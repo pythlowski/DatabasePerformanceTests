@@ -5,7 +5,7 @@ namespace DatabasePerformanceTests.Utils.Generators;
 
 public class EnrollmentsGenerator
 {
-    public (List<Enrollment>, Dictionary<int, Student>, Dictionary<Student, List<int>>) Generate(List<Student> students, int courseInstancesCount, int enrollmentsPerStudent)
+    public static (List<Enrollment>, Dictionary<int, Student>, Dictionary<Student, List<int>>) Generate(List<Student> students, int startId, int courseInstancesCount, int enrollmentsPerStudent)
     {
         var grades = new List<float> { 2, 3, 3.5f, 4, 4.5f, 5 };
         var enrollments = new List<Enrollment>();
@@ -19,7 +19,7 @@ public class EnrollmentsGenerator
         }
         
         var faker = new Faker<Enrollment>()
-            .RuleFor(e => e.Id, f => f.IndexFaker + 1)
+            .RuleFor(e => e.Id, f => f.IndexFaker + startId)
             .RuleFor(e => e.CourseInstanceId, f => f.Random.Number(1, courseInstancesCount))
             .RuleFor(e => e.EnrollmentDate, f => f.Date.Past(10))
             .RuleFor(e => e.Grade, f => f.PickRandom(grades));

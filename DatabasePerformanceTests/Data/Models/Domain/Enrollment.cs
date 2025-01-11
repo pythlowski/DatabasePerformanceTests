@@ -1,6 +1,6 @@
 namespace DatabasePerformanceTests.Data.Models.Domain;
 
-public class Enrollment
+public class Enrollment : IEnrollment
 {
     public int Id { get; set; }
     public int StudentId { get; set; }

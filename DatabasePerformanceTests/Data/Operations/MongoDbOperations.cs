@@ -1,7 +1,9 @@
 using DatabasePerformanceTests.Data.Contexts;
+using DatabasePerformanceTests.Data.Models;
 using DatabasePerformanceTests.Data.Models.Domain;
 using DatabasePerformanceTests.Data.Models.Mongo;
 using DatabasePerformanceTests.Data.Models.Results;
+using DatabasePerformanceTests.Data.Operations.Interfaces;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -9,9 +11,17 @@ namespace DatabasePerformanceTests.Data.Operations;
 
 public class MongoDbOperations(MongoDbContext context) : IDbOperations
 {
-    public Task InsertEnrollmentsAsync(IEnumerable<Enrollment> enrollments)
+
+    public async Task BulkInsertAsync(List<IEnrollment> data)
     {
-        throw new NotImplementedException();
+        var collection = context.GetCollection<MongoEnrollment>("enrollments");
+        
+        var bulkOps = new List<WriteModel<MongoEnrollment>>();
+        foreach(var element in data)
+        {
+            bulkOps.Add(new InsertOneModel<MongoEnrollment>((MongoEnrollment)element));
+        }
+        await collection.BulkWriteAsync(context.GetSession(), bulkOps);
     }
 
     public Task DeleteEnrollmentsAsync(int count)
@@ -25,17 +35,17 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
         throw new NotImplementedException();
     }
 
-    public async Task<List<StudentBase>> SelectStudentsOrderedByIdAsync(int limit)
+    public async Task<List<StudentBaseResult>> SelectStudentsOrderedByIdAsync(int limit)
     {
         var collection = context.GetCollection<MongoStudent>("students");
         var students = await collection.Find(Builders<MongoStudent>.Filter.Empty)
             .Sort(Builders<MongoStudent>.Sort.Ascending(x => x.Id))
             .Limit(limit)
             .ToListAsync();
-        return students.Select(StudentBase.FromMongo).ToList();
+        return students.Select(StudentBaseResult.FromMongo).ToList();
     }
 
-    public async Task<List<EnrollmentResult>> SelectEnrollmentsOrderedByIdAsync(int limit)
+    public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsOrderedByIdAsync(int limit)
     {
         var collection = context.GetCollection<MongoEnrollment>("enrollments");
         var data = await collection
@@ -47,7 +57,7 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
         return data;
     }
 
-    public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByIsActiveAsync(bool isActive)
+    public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsFilteredByIsActiveAsync(bool isActive)
     {
         var collection = context.GetCollection<MongoEnrollment>("enrollments");
         var data = await collection
@@ -59,7 +69,7 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
         return data;
     }
 
-    public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByEnrollmentDateAsync(DateTime dateFrom, DateTime dateTo)
+    public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsFilteredByEnrollmentDateAsync(DateTime dateFrom, DateTime dateTo)
     {
         var collection = context.GetCollection<MongoEnrollment>("enrollments");
         var data = await collection
@@ -74,7 +84,7 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
         return data;
     }
 
-    public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByBudgetAsync(int valueFrom, int valueTo)
+    public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsFilteredByBudgetAsync(int valueFrom, int valueTo)
     {
         var collection = context.GetCollection<MongoEnrollment>("enrollments");
         var data = await collection
@@ -89,7 +99,7 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
         return data;
     }
 
-    public async Task<List<EnrollmentResult>> SelectEnrollmentsFilteredByStudentsLastNameAsync(string lastNameSearchText)
+    public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsFilteredByStudentsLastNameAsync(string lastNameSearchText)
     {
         var collection = context.GetCollection<MongoEnrollment>("enrollments");
         var data = await collection
@@ -120,9 +130,9 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
         throw new NotImplementedException();
     }
     
-    private static ProjectionDefinition<MongoEnrollment, EnrollmentResult> GetEnrollmentProjection()
+    private static ProjectionDefinition<MongoEnrollment, EnrollmentBaseResult> GetEnrollmentProjection()
     {
-        return Builders<MongoEnrollment>.Projection.Expression(enrollment => new EnrollmentResult
+        return Builders<MongoEnrollment>.Projection.Expression(enrollment => new EnrollmentBaseResult
         {
             EnrollmentId = enrollment.Id,
             StudentFirstName = enrollment.Student.FirstName,

@@ -5,7 +5,7 @@ namespace DatabasePerformanceTests.Utils.Generators;
 
 public class CoursesGenerator
 {
-    public List<Course> Generate(int count)
+    public static List<Course> Generate(int count)
     {
         var descriptors = new[]
         {

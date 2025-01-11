@@ -2,6 +2,7 @@ using DatabasePerformanceTests.Data.Models.Domain;
 using DatabasePerformanceTests.Data.Models.Mongo;
 using DatabasePerformanceTests.Utils;
 using DatabasePerformanceTests.Utils.Config.Enums;
+using DatabasePerformanceTests.Utils.Generators;
 using DatabasePerformanceTests.Utils.Generators.Models;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
@@ -47,7 +48,7 @@ public class MongoDbContext : AbstractDbContext
     {
         Logger.Log("MongoDB Populating MongoDB database...");
         var studentsCollection = _testDatabase.GetCollection<MongoStudent>("students");
-        var denormalizedStudents = GetDenormalizedStudents(data).ToList();
+        var denormalizedStudents = DataGenerator.GetDenormalizedStudents(data).ToList();
         await studentsCollection.InsertManyAsync(denormalizedStudents);
         Logger.Log("MongoDB Finished inserting students.");
         
@@ -61,7 +62,7 @@ public class MongoDbContext : AbstractDbContext
         Logger.Log("MongoDB Finished inserting courseInstances.");
 
         var enrollmentsCollection = _testDatabase.GetCollection<MongoEnrollment>("enrollments");
-        var denormalizedEnrollments = GetDenormalizedEnrollments(data).ToList();
+        var denormalizedEnrollments = DataGenerator.GetDenormalizedEnrollments(data).ToList();
         Logger.Log("MongoDB Finished preparing denormalized enrollments");
         
         Logger.Log("MongoDB Inserting course instances...");
@@ -74,27 +75,7 @@ public class MongoDbContext : AbstractDbContext
         Logger.Log("MongoDB Finished inserting enrollments.");
     }
 
-    private IEnumerable<MongoStudent> GetDenormalizedStudents(GeneratedData data)
-    {
-        foreach (var student in data.Students)
-        {
-            var enrolledCourseInstanceIds = data.StudentToEnrolledCourseInstanceIdsMap[student];
-            var courseInstances = data.CourseInstances
-                .Where(c => enrolledCourseInstanceIds.Contains(c.Id)).ToList();
-            yield return MongoStudent.FromDomain(student, courseInstances, data.Courses, data.Instructors);
-        }
-    }
-
-    private IEnumerable<MongoEnrollment> GetDenormalizedEnrollments(GeneratedData data)
-    {
-        foreach (var enrollment in data.Enrollments)
-        {
-            var student = data.EnrollmentIdToStudentMap[enrollment.Id];
-            var courseInstance = data.CourseInstances.First(c => c.Id == enrollment.CourseInstanceId);
-            var course = data.Courses.First(c => c.Id == courseInstance.CourseId);
-            yield return MongoEnrollment.FromDomain(enrollment, student, courseInstance, course);
-        }
-    }
+    
     
     private IEnumerable<MongoCourseInstance> GetDenormalizedCourseInstances(GeneratedData data)
     {

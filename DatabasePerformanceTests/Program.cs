@@ -19,7 +19,7 @@ namespace DatabasePerformanceTests
             var databaseConfigs = configuration.GetSection("Connections").Get<DatabaseConfig[]>() 
                                   ?? throw new InvalidDataException("appsettings.json configuration requires Connections section");
 
-            databaseConfigs = databaseConfigs.Where(c => c.System == DatabaseSystem.MsSql).ToArray();
+            // databaseConfigs = databaseConfigs.Where(c => c.System == DatabaseSystem.Postgres).ToArray();
             
             DataGeneratorConfig dataGeneratorConfig = new()
             {
@@ -41,14 +41,14 @@ namespace DatabasePerformanceTests
 
             string databaseName = "testdb_big";
             
-            string method = args.Length > 0 ? args[0] : "analyze";
+            string method = args.Length > 0 ? args[0] : "tests";
             switch (method.ToLower())
             {
                 case "create":
                     await MainMethods.CreateDatabases(databaseName, databaseConfigs, dataGeneratorConfig);
                     break;
                 case "tests":
-                    await MainMethods.RunTests(databaseName, testsConfig, databaseConfigs);
+                    await MainMethods.RunTests(databaseName, testsConfig, databaseConfigs, dataGeneratorConfig);
                     break;
                 case "drop":
                     await MainMethods.DropDatabases(databaseName, databaseConfigs);

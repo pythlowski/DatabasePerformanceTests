@@ -367,4 +367,14 @@ public class MssqlDbContext : AbstractDbContext, ISqlDbContext
             _transactionConnection = null;
         }
     }
+
+    public SqlConnection GetTransactionConnection()
+    {
+        return _transactionConnection;
+    }
+    
+    public SqlTransaction GetTransaction()
+    {
+        return _transaction;
+    }
 }
