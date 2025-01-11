@@ -46,7 +46,7 @@ public class TestResultsManager
 
     private static string GetFileDirectory(string outputDirectory)
     {
-        return Path.Combine(outputDirectory.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)), "TestResults");
+        return Path.Combine(outputDirectory.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)), "Tests", "Results");
     }
     
     private static string GetNewestResultsFileName(string outputDirectory)

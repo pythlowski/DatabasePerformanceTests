@@ -1,4 +1,5 @@
 using System.Data;
+using DatabasePerformanceTests.Data.Models.Domain;
 using DatabasePerformanceTests.Utils;
 using DatabasePerformanceTests.Utils.Config.Enums;
 using DatabasePerformanceTests.Utils.Generators.Models;
@@ -254,7 +255,7 @@ public class MssqlDbContext : AbstractDbContext, ISqlDbContext
 
         await courseInstanceBulkCopy.WriteToServerAsync(courseInstanceTable);
 
-        Logger.Log("Inserting enrollments...");
+        Logger.Log("MSSQL Inserting enrollments...");
         var enrollmentTable = new DataTable();
         enrollmentTable.Columns.Add("EnrollmentId", typeof(int));
         enrollmentTable.Columns.Add("StudentId", typeof(int));
@@ -262,24 +263,30 @@ public class MssqlDbContext : AbstractDbContext, ISqlDbContext
         enrollmentTable.Columns.Add("EnrollmentDate", typeof(DateTime));
         enrollmentTable.Columns.Add("Grade", typeof(decimal));
 
-        foreach (var enrollment in data.Enrollments)
+        int batchSize = 1_000_000;
+
+        for (int i = 0; i < data.Enrollments.Count; i += batchSize)
         {
-            enrollmentTable.Rows.Add(enrollment.Id, enrollment.StudentId, enrollment.CourseInstanceId, enrollment.EnrollmentDate, enrollment.Grade);
+            enrollmentTable.Clear();
+            var batch = data.Enrollments.GetRange(i, Math.Min(batchSize, data.Enrollments.Count - i));
+            foreach (var enrollment in batch)
+            {
+                enrollmentTable.Rows.Add(enrollment.Id, enrollment.StudentId, enrollment.CourseInstanceId,
+                    enrollment.EnrollmentDate, enrollment.Grade);
+            }
+            using var enrollmentBulkCopy = new SqlBulkCopy(connection)
+            {
+                DestinationTableName = "Enrollments"
+            };
+
+            enrollmentBulkCopy.ColumnMappings.Add("EnrollmentId", "EnrollmentId");
+            enrollmentBulkCopy.ColumnMappings.Add("StudentId", "StudentId");
+            enrollmentBulkCopy.ColumnMappings.Add("CourseInstanceId", "CourseInstanceId");
+            enrollmentBulkCopy.ColumnMappings.Add("EnrollmentDate", "EnrollmentDate");
+            enrollmentBulkCopy.ColumnMappings.Add("Grade", "Grade");
+
+            await enrollmentBulkCopy.WriteToServerAsync(enrollmentTable);
         }
-
-        using var enrollmentBulkCopy = new SqlBulkCopy(connection)
-        {
-            DestinationTableName = "Enrollments"
-        };
-
-        enrollmentBulkCopy.ColumnMappings.Add("EnrollmentId", "EnrollmentId");
-        enrollmentBulkCopy.ColumnMappings.Add("StudentId", "StudentId");
-        enrollmentBulkCopy.ColumnMappings.Add("CourseInstanceId", "CourseInstanceId");
-        enrollmentBulkCopy.ColumnMappings.Add("EnrollmentDate", "EnrollmentDate");
-        enrollmentBulkCopy.ColumnMappings.Add("Grade", "Grade");
-
-        await enrollmentBulkCopy.WriteToServerAsync(enrollmentTable);
-        
         Logger.Log("MSSQL finished inserting.");
     }
 

@@ -10,4 +10,5 @@ public class GeneratedData
     public List<CourseInstance> CourseInstances { get; set; }
     public List<Enrollment> Enrollments { get; set; }
     public Dictionary<int, Student> EnrollmentIdToStudentMap { get; set; }
+    public Dictionary<Student, List<int>> StudentToEnrolledCourseInstanceIdsMap { get; set; }
 }

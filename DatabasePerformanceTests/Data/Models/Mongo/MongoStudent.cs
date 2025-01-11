@@ -13,8 +13,9 @@ public class MongoStudent
     public DateTime BirthDate { get; set; }
     public int AdmissionYear { get; set; }
     public bool IsActive { get; set; }
+    public List<MongoStudentEnrolledCourses> EnrolledCourses { get; set; }
 
-    public static MongoStudent FromDomain(Student student)
+    public static MongoStudent FromDomain(Student student, List<CourseInstance> enrolledCourseInstances, List<Course> courses, List<Instructor> instructors)
     {
         return new MongoStudent()
         {
@@ -23,7 +24,25 @@ public class MongoStudent
             LastName = student.LastName,
             BirthDate = student.BirthDate,
             AdmissionYear = student.AdmissionYear,
-            IsActive = student.IsActive
+            IsActive = student.IsActive,
+            EnrolledCourses = enrolledCourseInstances.Select(ci => new MongoStudentEnrolledCourses
+            {
+                CourseInstanceId = ci.Id,
+                CourseId = ci.CourseId,
+                CourseName = courses.Where(c => c.Id == ci.CourseId).Select(c => c.Name).FirstOrDefault(),
+                InstructorId = ci.InstructorId,
+                InstructorLastName = instructors.Where(i => i.Id == ci.InstructorId).Select(i => i.LastName).FirstOrDefault()
+            }).ToList()
         };
     }
+}
+
+public class MongoStudentEnrolledCourses
+{
+    public int CourseInstanceId { get; set; }
+    public int CourseId { get; set; }
+    public string CourseName { get; set; }
+    public int InstructorId { get; set; }
+    public string InstructorLastName { get; set; }
+
 }

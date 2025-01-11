@@ -1,3 +1,4 @@
+using DatabasePerformanceTests.Utils.Charts;
 using DatabasePerformanceTests.Utils.Config;
 using DatabasePerformanceTests.Utils.Factories;
 using DatabasePerformanceTests.Utils.Files;
@@ -56,5 +57,8 @@ public static class MainMethods
         {
             Console.WriteLine(result);
         }
+
+        var chartsGenerator = new ChartsGenerator();
+        chartsGenerator.GenerateCharts(results, testsConfig.OutputDirectory);
     }
 }
