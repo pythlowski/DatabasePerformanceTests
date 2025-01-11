@@ -56,11 +56,38 @@ public class TestsRunner
                 dataSizes:new List<int?>{ 100, 1000, 10_000, 100_000 }
             ),
             new TestDefinition(
+                OperationType.SelectStudentById,
+                async (databaseSystem, studentId, parameters) =>
+                {
+                    if (studentId is null) throw new ArgumentNullException(nameof(studentId));
+                    await _operations.SelectStudentByIdAsync((int)studentId);
+                },
+                dataSizes:new List<int?>{ 1, 500_000, 1_000_000 }
+            ),
+            new TestDefinition(
                 OperationType.SelectStudentsOrderedById,
                 async (databaseSystem, dataSize, parameters) =>
                 {
                     if (dataSize is null) throw new ArgumentNullException(nameof(dataSize));
                     await _operations.SelectStudentsOrderedByIdAsync((int)dataSize);
+                },
+                dataSizes:new List<int?>{ 1000, 10_000, 100_000, 1_000_000 }
+            ),
+            new TestDefinition(
+                OperationType.DeleteEnrollments,
+                async (databaseSystem, dataSize, parameters) =>
+                {
+                    if (dataSize is null) throw new ArgumentNullException(nameof(dataSize));
+                    await _operations.DeleteEnrollmentsAsync((int)dataSize);
+                },
+                dataSizes:new List<int?>{ 1000, 10_000, 100_000, 1_000_000 }
+            ),
+            new TestDefinition(
+                OperationType.UpdateEnrollments,
+                async (databaseSystem, dataSize, parameters) =>
+                {
+                    if (dataSize is null) throw new ArgumentNullException(nameof(dataSize));
+                    await _operations.UpdateEnrollmentDatesAsync((int)dataSize);
                 },
                 dataSizes:new List<int?>{ 1000, 10_000, 100_000, 1_000_000 }
             ),
@@ -118,6 +145,46 @@ public class TestsRunner
                     await _operations.SelectEnrollmentsFilteredByStudentsLastNameAsync(searchText);
                 },
                 parameters:new Dictionary<string, object> { { "SearchText", "a" } }
+            ),
+            new TestDefinition(
+                OperationType.SelectEnrollmentsWithManyFilters,
+                async (databaseSystem, dataSize, parameters) =>
+                {
+                    var isActive = (bool)parameters["IsActive"];
+                    var dateFrom = (DateTime)parameters["DateFrom"];
+                    var dateTo = (DateTime)parameters["DateTo"];
+                    var valueFrom = (int)parameters["ValueFrom"];
+                    var valueTo = (int)parameters["ValueTo"];
+                    var searchText = (string)parameters["SearchText"];
+                    await _operations.SelectEnrollmentsWithManyFiltersAsync(isActive, dateFrom, dateTo, valueFrom, valueTo, searchText);
+                },
+                parameters:new Dictionary<string, object>
+                {
+                    { "IsActive", true },
+                    { "DateFrom", new DateTime(2020, 1, 1) }, 
+                    { "DateTo", new DateTime(2021, 1, 1) },
+                    { "ValueFrom", 25_000_000 }, 
+                    { "ValueTo", 75_000_000 },
+                    { "SearchText", "a" }
+                }
+            ),
+            new TestDefinition(
+                OperationType.SelectEnrollmentsWithPagination,
+                async (databaseSystem, pageNumber, parameters) =>
+                {
+                    if (pageNumber is null) throw new ArgumentNullException(nameof(pageNumber));
+                    await _operations.SelectEnrollmentsWithPaginationAsync(100, (int)pageNumber);
+                },
+                dataSizes:new List<int?>{ 1, 5, 10, 20, 50, 100, 250, 500, 1000 }
+            ),
+            new TestDefinition(
+                OperationType.SelectEnrollmentsWithManySortParameters,
+                async (databaseSystem, dataSize, parameters) =>
+                {
+                    if (dataSize is null) throw new ArgumentNullException(nameof(dataSize));
+                    await _operations.SelectEnrollmentsWithManySortParametersAsync((int)dataSize);
+                },
+                dataSizes:new List<int?>{ 1000, 10_000, 100_000, 1_000_000, 10_000_000 }
             ),
         };
     }

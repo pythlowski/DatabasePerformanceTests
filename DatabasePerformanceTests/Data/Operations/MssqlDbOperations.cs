@@ -1,5 +1,4 @@
 using System.Data;
-using System.Globalization;
 using DatabasePerformanceTests.Data.Contexts;
 using DatabasePerformanceTests.Data.Models;
 using DatabasePerformanceTests.Data.Models.Domain;
@@ -11,9 +10,12 @@ namespace DatabasePerformanceTests.Data.Operations;
 
 public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
 {
-    private string GetEnrollmentsQuery(List<string>? whereConditions, List<string>? orderByClauses, int? limit = null)
+    private string GetEnrollmentsQuery(List<string>? whereConditions, List<string>? orderByClauses, 
+        int? limit = null, int? offset = null)
     {
-        string limitQuery = limit is not null ? "TOP " + limit : "";
+        string limitQuery = limit is not null && offset is null ? "TOP " + limit : "";
+        string paginationQuery = limit is not null && offset is not null ? $"OFFSET {offset} ROWS FETCH NEXT {limit} ROWS ONLY" : "";
+        
         string whereQuery = whereConditions != null && whereConditions.Any()
             ? "WHERE " + string.Join(" AND ", whereConditions)
             : "";
@@ -33,6 +35,7 @@ public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
         JOIN Instructors i ON ci.InstructorId = i.InstructorId
         {whereQuery}
         {orderByQuery}
+        {paginationQuery}
         ";  
     }
 
@@ -77,14 +80,16 @@ public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
         await bulkCopy.WriteToServerAsync(enrollmentTable);
     }
 
-    public Task DeleteEnrollmentsAsync(int count)
+    public async Task DeleteEnrollmentsAsync(int count)
     {
-        return Task.CompletedTask;
+        string query = $"DELETE FROM Enrollments WHERE EnrollmentId <= {count}";
+        await context.ExecuteNonQueryAsync(query:query, useCurrentTransaction:true);
     }
 
-    public Task UpdateEnrollmentDatesAsync(int count)
+    public async Task UpdateEnrollmentDatesAsync(int count)
     {
-        throw new NotImplementedException();
+        string query = $"UPDATE Enrollments SET EnrollmentDate = CAST(GETDATE() AS DATE) WHERE EnrollmentId <= {count}";
+        await context.ExecuteNonQueryAsync(query:query, useCurrentTransaction:true);
     }
 
     public async Task<List<StudentBaseResult>> SelectStudentsOrderedByIdAsync(int limit)
@@ -96,6 +101,29 @@ public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
             FirstName = (string)row["FirstName"],
             LastName = (string)row["LastName"]
         }).ToList();
+    }
+
+    public async Task<StudentDetailsResult> SelectStudentByIdAsync(int id)
+    {
+        var query = @$"
+            SELECT StudentId, FirstName, LastName, BirthDate, AdmissionYear, IsActive 
+            FROM Students WHERE StudentId = {id}";
+        var data = await context.ExecuteReaderAsync(query, true);
+        var student = data.FirstOrDefault();
+        return new StudentDetailsResult
+        {
+            Id = (int)student["StudentId"],
+            FirstName = (string)student["FirstName"],
+            LastName = (string)student["LastName"],
+            BirthDate = (DateTime)student["BirthDate"],
+            AdmissionYear = (int)student["AdmissionYear"],
+            IsActive = (bool)student["IsActive"]
+        };
+    }
+
+    public async Task<CourseInstanceBaseResult> SelectCourseInstancesByStudentIdAsync(int studentId)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsOrderedByIdAsync(int limit)
@@ -152,19 +180,46 @@ public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
         return await ExecuteEnrollmentsQueryAsync(query);     
     }
 
-    public Task SelectEnrollmentsWithManyFiltersAsync(bool isActive, DateTime dateFrom, DateTime dateTo, int valueFrom,
+    public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsWithManyFiltersAsync(bool isActive, DateTime dateFrom, DateTime dateTo, int valueFrom,
         int valueTo, string lastNameSearchText)
     {
-        throw new NotImplementedException();
+        string isActiveValue = isActive ? "1" : "0";
+        string query = GetEnrollmentsQuery(
+            whereConditions:new List<string>
+            {
+                $"s.IsActive = {isActiveValue}",
+                $"e.EnrollmentDate BETWEEN '{dateFrom:yyyy-MM-dd}' AND '{dateTo:yyyy-MM-dd}'",
+                $"ci.Budget BETWEEN {valueFrom} AND {valueTo}",
+                $"s.LastName LIKE '%{lastNameSearchText}%'",
+            }, 
+            orderByClauses:null, 
+            limit:null);
+        return await ExecuteEnrollmentsQueryAsync(query);     
     }
 
-    public Task SelectEnrollmentsWithPaginationAsync(int pageSize, int pageNumber)
+    public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsWithPaginationAsync(int pageSize, int pageNumber)
     {
-        throw new NotImplementedException();
+        string query = GetEnrollmentsQuery(
+            whereConditions:null, 
+            orderByClauses:new List<string>{ "e.EnrollmentId" }, 
+            limit:pageSize,
+            offset:pageSize * (pageNumber - 1));
+        return await ExecuteEnrollmentsQueryAsync(query);
     }
 
-    public Task SelectEnrollmentsWithManySortParametersAsync(int limit)
+    public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsWithManySortParametersAsync(int limit)
     {
-        throw new NotImplementedException();
+        string query = GetEnrollmentsQuery(
+            whereConditions:null, 
+            orderByClauses:new List<string>
+            {
+                "s.LastName ASC",
+                "e.EnrollmentDate DESC",
+                "ci.Budget DESC",
+                "s.IsActive DESC",
+            },
+            limit:limit
+        );
+        return await ExecuteEnrollmentsQueryAsync(query);
     }
 }

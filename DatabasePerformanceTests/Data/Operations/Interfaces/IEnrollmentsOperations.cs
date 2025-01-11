@@ -13,7 +13,7 @@ public interface IEnrollmentsOperations
     Task<List<EnrollmentBaseResult>> SelectEnrollmentsFilteredByEnrollmentDateAsync(DateTime dateFrom, DateTime dateTo);
     Task<List<EnrollmentBaseResult>> SelectEnrollmentsFilteredByBudgetAsync(int valueFrom, int valueTo);
     Task<List<EnrollmentBaseResult>> SelectEnrollmentsFilteredByStudentsLastNameAsync(string lastNameSearchText);
-    // Task<List<EnrollmentResult>> SelectEnrollmentsWithManyFiltersAsync(bool isActive, DateTime dateFrom, DateTime dateTo, int valueFrom, int valueTo, string lastNameSearchText);
-    // Task<List<EnrollmentResult>> SelectEnrollmentsWithPaginationAsync(int pageSize, int pageNumber);
-    // Task<List<EnrollmentResult>> SelectEnrollmentsWithManySortParametersAsync(int limit);
+    Task<List<EnrollmentBaseResult>> SelectEnrollmentsWithManyFiltersAsync(bool isActive, DateTime dateFrom, DateTime dateTo, int valueFrom, int valueTo, string lastNameSearchText);
+    Task<List<EnrollmentBaseResult>> SelectEnrollmentsWithPaginationAsync(int pageSize, int pageNumber);
+    Task<List<EnrollmentBaseResult>> SelectEnrollmentsWithManySortParametersAsync(int limit);
 }
