@@ -8,6 +8,7 @@ public interface IEnrollmentsOperations
     Task BulkInsertAsync(List<IEnrollment> data);
     Task DeleteEnrollmentsAsync(int count);
     Task UpdateEnrollmentDatesAsync(int count);
+    Task TruncateEnrollmentsAsync();
     Task<List<EnrollmentBaseResult>> SelectEnrollmentsOrderedByIdAsync(int limit);
     Task<List<EnrollmentBaseResult>> SelectEnrollmentsFilteredByIsActiveAsync(bool isActive);
     Task<List<EnrollmentBaseResult>> SelectEnrollmentsFilteredByEnrollmentDateAsync(DateTime dateFrom, DateTime dateTo);

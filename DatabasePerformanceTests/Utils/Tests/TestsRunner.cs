@@ -56,6 +56,13 @@ public class TestsRunner
                 dataSizes:new List<int?>{ 100, 1000, 10_000, 100_000 }
             ),
             new TestDefinition(
+                OperationType.TruncateEnrollments,
+                async (databaseSystem, studentId, parameters) =>
+                {
+                    await _operations.TruncateEnrollmentsAsync();
+                }
+            ),
+            new TestDefinition(
                 OperationType.SelectStudentById,
                 async (databaseSystem, studentId, parameters) =>
                 {

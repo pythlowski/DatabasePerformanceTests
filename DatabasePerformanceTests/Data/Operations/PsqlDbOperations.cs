@@ -81,6 +81,12 @@ public class PsqlDbOperations(PsqlDbContext context) : IDbOperations
         await context.ExecuteNonQueryAsync(query:query, useCurrentTransaction:true);
     }
 
+    public async Task TruncateEnrollmentsAsync()
+    {
+        string query = "TRUNCATE TABLE \"Enrollments\";";
+        await context.ExecuteNonQueryAsync(query:query, useCurrentTransaction:true);
+    }
+
     public async Task<List<StudentBaseResult>> SelectStudentsOrderedByIdAsync(int limit)
     {
         string query = $"SELECT \"StudentId\", \"FirstName\", \"LastName\" FROM \"Students\" ORDER BY \"StudentId\" LIMIT {limit}";
@@ -99,14 +105,16 @@ public class PsqlDbOperations(PsqlDbContext context) : IDbOperations
             FROM ""Students"" WHERE ""StudentId"" = {id}";
         var data = await context.ExecuteReaderAsync(query, true);
         var student = data.FirstOrDefault();
-        return new StudentDetailsResult(
-            (int)student["StudentId"],
-            (string)student["FirstName"],
-            (string)student["LastName"],
-            (DateTime)student["BirthDate"],
-            (int)student["AdmissionYear"],
-            (bool)student["IsActive"]
-        );
+        return student is null 
+                ? new StudentDetailsResult()
+                : new StudentDetailsResult(
+                    (int)student["StudentId"],
+                    (string)student["FirstName"],
+                    (string)student["LastName"],
+                    (DateTime)student["BirthDate"],
+                    (int)student["AdmissionYear"],
+                    (bool)student["IsActive"]
+                );
     }
 
     public async Task<CourseInstanceBaseResult> SelectCourseInstancesByStudentIdAsync(int studentId)

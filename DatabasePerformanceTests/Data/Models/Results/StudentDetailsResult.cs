@@ -4,6 +4,7 @@ namespace DatabasePerformanceTests.Data.Models.Results;
 
 public class StudentDetailsResult : StudentBaseResult
 {
+    public StudentDetailsResult(){}
     public StudentDetailsResult(string mongoId, string firstName, string lastName, DateTime birthDate, int admissionYear, bool isActive) : base(mongoId, firstName, lastName)
     {
         BirthDate = birthDate;
@@ -24,6 +25,9 @@ public class StudentDetailsResult : StudentBaseResult
     
     public static StudentDetailsResult FromMongo(MongoStudent student)
     {
+        if (student is null)
+            return new StudentDetailsResult();
+        
         return new StudentDetailsResult(
             student.Id,
             student.FirstName,

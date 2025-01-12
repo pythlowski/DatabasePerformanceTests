@@ -5,6 +5,7 @@ namespace DatabasePerformanceTests.Data.Models.Results;
 
 public class StudentBaseResult
 {
+    public StudentBaseResult(){}
     public StudentBaseResult(string mongoId, string firstName, string lastName)
     {
         Id = int.Parse(mongoId.Split('-')[1]);

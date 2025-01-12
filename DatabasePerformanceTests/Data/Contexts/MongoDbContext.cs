@@ -122,7 +122,7 @@ public class MongoDbContext : AbstractDbContext
         await collection.Indexes.CreateOneAsync(courseBudgetIndex);
         Logger.Log("MongoDB Finished creating indexes");
     }
-    
+
     public override async Task DropDatabaseAsync()
     {
         await _client.DropDatabaseAsync(DatabaseName);

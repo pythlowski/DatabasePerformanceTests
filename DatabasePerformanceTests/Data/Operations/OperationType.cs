@@ -8,6 +8,7 @@ public enum OperationType
         DeleteEnrollmentsOnEmptyTable,
     UpdateEnrollments,
         UpdateEnrollmentsOnEmptyTable,
+    TruncateEnrollments,
     SelectStudentById,
         SelectCourseInstancesByStudentId,
     SelectStudentsOrderedById,

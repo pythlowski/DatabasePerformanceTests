@@ -26,16 +26,23 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
     public async Task DeleteEnrollmentsAsync(int count)
     {
         var collection = context.GetCollection<MongoEnrollment>("enrollments");
-        await collection.DeleteManyAsync(Builders<MongoEnrollment>.Filter.Lte(x => x.Id, count));
+        await collection.DeleteManyAsync(context.GetSession(), Builders<MongoEnrollment>.Filter.Lte(x => x.Id, count));
     }
 
     public async Task UpdateEnrollmentDatesAsync(int count)
     {
         var collection = context.GetCollection<MongoEnrollment>("enrollments");
         await collection.UpdateManyAsync(
+            context.GetSession(),
             Builders<MongoEnrollment>.Filter.Lte(x => x.Id, count),
             Builders<MongoEnrollment>.Update.Set(x => x.EnrollmentDate, DateTime.UtcNow)
         );
+    }
+
+    public async Task TruncateEnrollmentsAsync()
+    {
+        var collection = context.GetCollection<MongoEnrollment>("enrollments");
+        await collection.DeleteManyAsync(context.GetSession(), FilterDefinition<MongoEnrollment>.Empty);
     }
 
     public async Task<List<StudentBaseResult>> SelectStudentsOrderedByIdAsync(int limit)
