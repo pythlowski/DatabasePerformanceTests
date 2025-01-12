@@ -7,10 +7,10 @@ namespace DatabasePerformanceTests.Utils.Files;
 
 public class TestResultsManager
 {
-    private static readonly string FILE_NAME_DATE_FORMAT = "yyyy_MM_dd_HH_mm_ss";
+    private static readonly string RESULTS_DIRECTORY_NAME = "Results";
     public static void WriteResultsToFile(List<OperationResults> results, string outputDirectory)
     {
-        string fileName = $"results_{DateTime.Now.ToString(FILE_NAME_DATE_FORMAT)}";
+        string fileName = $"results_{FilesManager.GetFileNameDate()}";
         string fileDirectory = GetFileDirectory(outputDirectory);
         Directory.CreateDirectory(fileDirectory);
         string filePath = Path.Combine(fileDirectory, fileName + ".json");
@@ -46,7 +46,7 @@ public class TestResultsManager
 
     private static string GetFileDirectory(string outputDirectory)
     {
-        return Path.Combine(outputDirectory.Replace("~", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)), "Tests", "Results");
+        return FilesManager.GetFileDirectory(outputDirectory, RESULTS_DIRECTORY_NAME);
     }
     
     private static string GetNewestResultsFileName(string outputDirectory)
@@ -57,7 +57,7 @@ public class TestResultsManager
         string latestFilePath = filePaths
             .OrderByDescending(filePath => DateTime.ParseExact(
                 Path.GetFileNameWithoutExtension(filePath).Substring(8, 19), 
-                FILE_NAME_DATE_FORMAT, 
+                FilesManager.GetFileNameDateFormat(), 
                 CultureInfo.InvariantCulture))
             .FirstOrDefault() ?? "results_latest";
 

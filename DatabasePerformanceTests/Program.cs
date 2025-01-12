@@ -21,27 +21,27 @@ namespace DatabasePerformanceTests
 
             // databaseConfigs = databaseConfigs.Where(c => c.System == DatabaseSystem.Postgres).ToArray();
             
-            // DataGeneratorConfig dataGeneratorConfig = new()
-            // {
-            //     StudentsCount = 1_000_000,
-            //     InstructorsCount = 500,
-            //     CoursesCount = 1000,
-            //     CourseInstancesPerCourse = 10,
-            //     EnrollmentsPerStudent = 10
-            // };
-            
             DataGeneratorConfig dataGeneratorConfig = new()
             {
-                StudentsCount = 1000,
-                InstructorsCount = 5,
-                CoursesCount = 100,
-                CourseInstancesPerCourse = 2,
+                StudentsCount = 1_000_000,
+                InstructorsCount = 500,
+                CoursesCount = 1000,
+                CourseInstancesPerCourse = 10,
                 EnrollmentsPerStudent = 10
             };
-
-            string databaseName = "testdb_small";
             
-            string method = args.Length > 0 ? args[0] : "tests";
+            // DataGeneratorConfig dataGeneratorConfig = new()
+            // {
+            //     StudentsCount = 1000,
+            //     InstructorsCount = 5,
+            //     CoursesCount = 100,
+            //     CourseInstancesPerCourse = 2,
+            //     EnrollmentsPerStudent = 10
+            // };
+
+            string databaseName = "testdb_big";
+            
+            string method = args.Length > 0 ? args[0] : "analyze";
             switch (method.ToLower())
             {
                 case "create":
