@@ -131,7 +131,9 @@ public class PsqlDbContext : AbstractDbContext, ISqlDbContext
                 ""CourseId"" INT NOT NULL,
                 ""InstructorId"" INT NOT NULL,
                 ""AcademicYear"" INT NOT NULL,
-                ""Budget"" BIGINT
+                ""Budget"" BIGINT,
+                CONSTRAINT ""FK_CourseInstances_Course"" FOREIGN KEY (""CourseId"") REFERENCES ""Courses""(""CourseId"") ON DELETE CASCADE,
+                CONSTRAINT ""FK_CourseInstances_Instructor"" FOREIGN KEY (""InstructorId"") REFERENCES ""Instructors""(""InstructorId"") ON DELETE SET NULL
             );
 
             CREATE TABLE ""Enrollments"" (
@@ -139,7 +141,9 @@ public class PsqlDbContext : AbstractDbContext, ISqlDbContext
                 ""StudentId"" INT NOT NULL,
                 ""CourseInstanceId"" INT NOT NULL,
                 ""EnrollmentDate"" DATE NOT NULL,
-                ""Grade"" DECIMAL(3, 2)
+                ""Grade"" DECIMAL(3, 2),
+                CONSTRAINT ""FK_Enrollments_Student"" FOREIGN KEY (""StudentId"") REFERENCES ""Students""(""StudentId"") ON DELETE CASCADE,
+                CONSTRAINT ""FK_Enrollments_CourseInstance"" FOREIGN KEY (""CourseInstanceId"") REFERENCES ""CourseInstances""(""CourseInstanceId"") ON DELETE CASCADE
             );
         ";
         await using var connection = Connection(DatabaseName);
