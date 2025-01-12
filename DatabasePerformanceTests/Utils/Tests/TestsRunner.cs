@@ -34,7 +34,7 @@ public class TestsRunner
                 async (databaseSystem, dataSize, parameters) =>
                 {
                     if (dataSize is null) throw new ArgumentNullException(nameof(dataSize));
-
+            
                     List<IEnrollment> enrollments;
                     if (databaseSystem == DatabaseSystem.Mongo)
                     {
@@ -56,18 +56,10 @@ public class TestsRunner
                 dataSizes:new List<int?>{ 100, 1000, 10_000, 100_000 }
             ),
             new TestDefinition(
-                OperationType.TruncateEnrollments,
-                async (databaseSystem, studentId, parameters) =>
-                {
-                    await _operations.TruncateEnrollmentsAsync();
-                }
-            ),
-            new TestDefinition(
                 OperationType.SelectStudentById,
-                async (databaseSystem, studentId, parameters) =>
+                async (databaseSystem, dataSize, parameters) =>
                 {
-                    if (studentId is null) throw new ArgumentNullException(nameof(studentId));
-                    await _operations.SelectStudentByIdAsync((int)studentId);
+                    await _operations.SelectStudentByIdAsync(generatorConfig.StudentsCount / 2);
                 },
                 dataSizes:new List<int?>{ 1, 500_000, 1_000_000 }
             ),
@@ -81,18 +73,29 @@ public class TestsRunner
                 dataSizes:new List<int?>{ 1000, 10_000, 100_000, 1_000_000 }
             ),
             new TestDefinition(
+                    OperationType.SelectCourseInstancesByStudentId,
+                    async (databaseSystem, dataSize, parameters) =>
+                    {
+                        await _operations.SelectCourseInstancesByStudentIdAsync(generatorConfig.StudentsCount / 2);
+                    }
+                ),
+            new TestDefinition(
                 OperationType.DeleteEnrollments,
                 async (databaseSystem, dataSize, parameters) =>
                 {
+                    if (databaseSystem == DatabaseSystem.Mongo && dataSize > 100_000) return; // won't work in a transaction
+                    
                     if (dataSize is null) throw new ArgumentNullException(nameof(dataSize));
                     await _operations.DeleteEnrollmentsAsync((int)dataSize);
                 },
-                dataSizes:new List<int?>{ 1000, 10_000, 100_000, 1_000_000 }
+                dataSizes:new List<int?>{ 1000, 10_000, 100_000, 500_000 }
             ),
             new TestDefinition(
                 OperationType.UpdateEnrollments,
                 async (databaseSystem, dataSize, parameters) =>
                 {
+                    if (databaseSystem == DatabaseSystem.Mongo && dataSize > 100_000) return; // won't work in a transaction
+
                     if (dataSize is null) throw new ArgumentNullException(nameof(dataSize));
                     await _operations.UpdateEnrollmentDatesAsync((int)dataSize);
                 },
@@ -200,7 +203,7 @@ public class TestsRunner
     {
         List<OperationResults> results = new();
 
-        foreach (var test in _testDefinitions)
+        foreach (var (test, defIndex) in _testDefinitions.Select((td, i) => (td, i)))
         {
             foreach (var dataSize in test.DataSizes ?? new List<int?> { null })
             {
@@ -214,7 +217,7 @@ public class TestsRunner
                     foreach (var iteration in Enumerable.Range(0, TEST_ITERATIONS))
                     {
                         Logger.Log(
-                            $"[{iteration + 1}] Running test: {test.OperationType} with data size {dataSize} for {context.DatabaseSystem}...");
+                            $"[{defIndex+1}/{_testDefinitions.Count}] [{iteration + 1}/{TEST_ITERATIONS}] Running test: {test.OperationType} with data size {dataSize} for {context.DatabaseSystem}...");
                         
                         try
                         {
