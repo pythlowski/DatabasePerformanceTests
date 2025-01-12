@@ -64,9 +64,19 @@ public class MongoDbOperations(MongoDbContext context) : IDbOperations
         return StudentDetailsResult.FromMongo(mongoStudent);
     }
 
-    public async Task<CourseInstanceBaseResult> SelectCourseInstancesByStudentIdAsync(int studentId)
+    public async Task<List<CourseInstanceBaseResult>> SelectCourseInstancesByStudentIdAsync(int studentId)
     {
-        throw new NotImplementedException();
+        var collection = context.GetCollection<MongoStudent>("students");
+        var student = await collection
+            .Find(Builders<MongoStudent>.Filter.Eq(x => x.Id, $"student-{studentId}"))
+            .FirstOrDefaultAsync();
+        return student.EnrolledCourses.Select(c => new CourseInstanceBaseResult(
+                c.CourseInstanceId,
+                c.CourseId,
+                c.CourseName,
+                c.InstructorId,
+                c.InstructorLastName
+            )).ToList();
     }
 
     public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsOrderedByIdAsync(int limit)

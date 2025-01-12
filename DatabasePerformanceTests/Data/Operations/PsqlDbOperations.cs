@@ -117,9 +117,29 @@ public class PsqlDbOperations(PsqlDbContext context) : IDbOperations
                 );
     }
 
-    public async Task<CourseInstanceBaseResult> SelectCourseInstancesByStudentIdAsync(int studentId)
+    public async Task<List<CourseInstanceBaseResult>> SelectCourseInstancesByStudentIdAsync(int studentId)
     {
-        throw new NotImplementedException();
+        var query = @$"
+            SELECT 
+                ci.""CourseInstanceId"",
+                c.""CourseId"",
+                c.""CourseName"",
+                i.""InstructorId"",
+                i.""LastName"" AS ""InstructorLastName""
+            FROM ""Enrollments"" e
+            JOIN ""Students"" s ON e.""StudentId"" = s.""StudentId""
+            JOIN ""CourseInstances"" ci ON e.""CourseInstanceId"" = ci.""CourseInstanceId""
+            JOIN ""Courses"" c ON ci.""CourseId"" = c.""CourseId""
+            JOIN ""Instructors"" i ON ci.""InstructorId"" = i.""InstructorId""
+            where s.""StudentId"" = {studentId}";
+        var data = await context.ExecuteReaderAsync(query, true);
+        return data.Select(row => new CourseInstanceBaseResult(
+            (int)row["CourseInstanceId"],
+            (int)row["CourseId"],
+            (string)row["CourseName"],
+            (int)row["InstructorId"],
+            (string)row["InstructorLastName"]
+        )).ToList();
     }
 
     public async Task<List<EnrollmentBaseResult>> SelectEnrollmentsOrderedByIdAsync(int limit)

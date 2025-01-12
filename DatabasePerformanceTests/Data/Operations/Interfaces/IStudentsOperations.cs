@@ -6,5 +6,5 @@ public interface IStudentsOperations
 {
     Task<List<StudentBaseResult>> SelectStudentsOrderedByIdAsync(int limit);
     Task<StudentDetailsResult> SelectStudentByIdAsync(int id);
-    Task<CourseInstanceBaseResult> SelectCourseInstancesByStudentIdAsync(int studentId);
+    Task<List<CourseInstanceBaseResult>> SelectCourseInstancesByStudentIdAsync(int studentId);
 }
