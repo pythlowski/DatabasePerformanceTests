@@ -24,8 +24,8 @@ public class TestsRunner
     {
         TEST_ITERATIONS = iterations;
         _contexts = contexts;
-        var dummyEnrollments = DummyEnrollmentsGenerator.GenerateDomain(generatorConfig, 100_000);
-        var dummyMongoEnrollments = DummyEnrollmentsGenerator.GenerateMongo( generatorConfig, 100_000);
+        var dummyEnrollments = DummyEnrollmentsGenerator.GenerateDomain(generatorConfig, 1_000_000);
+        var dummyMongoEnrollments = DummyEnrollmentsGenerator.GenerateMongo( generatorConfig, 1_000_000);
         
         _testDefinitions = new()
         {
@@ -53,7 +53,37 @@ public class TestsRunner
                     { "Enrollments", dummyEnrollments }, 
                     { "MongoEnrollments", dummyMongoEnrollments }
                 },
-                dataSizes:new List<int?>{ 100, 1000, 10_000, 100_000 }
+                dataSizes:new List<int?>{ 100, 1000, 10_000, 100_000, 200_000 }
+            ),
+            new TestDefinition(
+                OperationType.BulkInsertEnrollmentsOnEmptyTable,
+                prepareFunction: async () =>
+                {
+                    await _operations.TruncateEnrollmentsAsync();
+                },
+                testFunction:async (databaseSystem, dataSize, parameters) =>
+                {
+                    if (dataSize is null) throw new ArgumentNullException(nameof(dataSize));
+
+                    List<IEnrollment> enrollments;
+                    if (databaseSystem == DatabaseSystem.Mongo)
+                    {
+                        enrollments = ((List<MongoEnrollment>)parameters["MongoEnrollments"])
+                            .Take((int)dataSize).Cast<IEnrollment>().ToList();
+                    }
+                    else
+                    {
+                        enrollments = ((List<Enrollment>)parameters["Enrollments"])
+                            .Take((int)dataSize).Cast<IEnrollment>().ToList();
+                    }
+                    await _operations.BulkInsertAsync(enrollments);
+                },
+                parameters:new Dictionary<string, object>
+                {
+                    { "Enrollments", dummyEnrollments }, 
+                    { "MongoEnrollments", dummyMongoEnrollments }
+                },
+                dataSizes:new List<int?>{ 100, 1000, 10_000, 100_000, 200_000 }
             ),
             new TestDefinition(
                 OperationType.TruncateEnrollments,
@@ -221,6 +251,7 @@ public class TestsRunner
                             await context.ClearCacheAsync();
                             await context.StartTransactionAsync();
 
+                            if (test.PrepareFunction != null) await test.PrepareFunction(); 
                             var stopwatch = Stopwatch.StartNew();
                             await test.TestFunction(context.DatabaseSystem, dataSize, test.Parameters);
                             stopwatch.Stop();
