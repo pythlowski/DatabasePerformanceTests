@@ -41,7 +41,7 @@ namespace DatabasePerformanceTests
 
             string databaseName = "testdb_big";
             
-            string method = args.Length > 0 ? args[0] : "analyze";
+            string method = args.Length > 0 ? args[0] : "tests";
             switch (method.ToLower())
             {
                 case "create":

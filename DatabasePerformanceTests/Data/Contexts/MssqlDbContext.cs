@@ -135,8 +135,8 @@ public class MssqlDbContext : AbstractDbContext, ISqlDbContext
                 InstructorId INT NOT NULL,
                 AcademicYear INT NOT NULL,
                 Budget BIGINT,
-                CONSTRAINT FK_CourseInstances_Course FOREIGN KEY (CourseId) REFERENCES Courses(CourseId) ON DELETE CASCADE,
-                CONSTRAINT FK_CourseInstances_Instructor FOREIGN KEY (InstructorId) REFERENCES Instructors(InstructorId) ON DELETE SET NULL
+                CONSTRAINT FK_CourseInstances_Course FOREIGN KEY (CourseId) REFERENCES Courses(CourseId),
+                CONSTRAINT FK_CourseInstances_Instructor FOREIGN KEY (InstructorId) REFERENCES Instructors(InstructorId)
             );
 
             CREATE TABLE Enrollments (
@@ -145,8 +145,8 @@ public class MssqlDbContext : AbstractDbContext, ISqlDbContext
                 CourseInstanceId INT NOT NULL,
                 EnrollmentDate DATE NOT NULL,
                 Grade DECIMAL(3, 2),
-                CONSTRAINT FK_Enrollments_Student FOREIGN KEY (StudentId) REFERENCES Students(StudentId) ON DELETE CASCADE,
-                CONSTRAINT FK_Enrollments_CourseInstance FOREIGN KEY (CourseInstanceId) REFERENCES CourseInstances(CourseInstanceId) ON DELETE CASCADE
+                CONSTRAINT FK_Enrollments_Student FOREIGN KEY (StudentId) REFERENCES Students(StudentId),
+                CONSTRAINT FK_Enrollments_CourseInstance FOREIGN KEY (CourseInstanceId) REFERENCES CourseInstances(CourseInstanceId)
             );
         ";
         

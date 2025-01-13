@@ -214,8 +214,12 @@ public class TestsRunner
                     SystemResults systemResults = new();
                     _operations = OperationsFactory.CreateOperations(context);
                     
+                    int iterationErrors = 0;
                     foreach (var iteration in Enumerable.Range(0, TEST_ITERATIONS))
                     {
+                        if (iterationErrors >= 3)
+                            break;
+                        
                         Logger.Log(
                             $"[{defIndex+1}/{_testDefinitions.Count}] [{iteration + 1}/{TEST_ITERATIONS}] Running test: {test.OperationType} with data size {dataSize} for {context.DatabaseSystem}...");
                         
@@ -229,10 +233,13 @@ public class TestsRunner
                             await test.TestFunction(context.DatabaseSystem, dataSize, test.Parameters);
                             stopwatch.Stop();
 
-                            systemResults.RegisterTime((int)stopwatch.ElapsedMilliseconds);
+                            var testTime = (int)stopwatch.ElapsedMilliseconds;
+                            Logger.Log($"Took {testTime} ms.");
+                            systemResults.RegisterTime(testTime);
                         }
                         catch (Exception ex)
                         {
+                            iterationErrors++;
                             Console.WriteLine($"Test '{test.OperationType}' failed: {ex.Message}");
                         }
                         finally
