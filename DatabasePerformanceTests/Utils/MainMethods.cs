@@ -52,6 +52,9 @@ public static class MainMethods
     {
         var results = TestResultsManager.ReadResultsFromFile(testsConfig.OutputDirectory);
 
+        var statisticsTablesGenerator = new StatisticsTablesGenerator();
+        // statisticsTablesGenerator.PrintStatisticsTables(results);
+        statisticsTablesGenerator.GenerateStatisticsTablesInLatex(results);
         var chartsGenerator = new ChartsGenerator();
         chartsGenerator.GenerateCharts(results, testsConfig.OutputDirectory);
     }

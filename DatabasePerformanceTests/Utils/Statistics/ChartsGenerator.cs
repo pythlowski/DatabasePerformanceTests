@@ -124,7 +124,7 @@ public class ChartsGenerator
                 new OperationChartLine(OperationType.SelectEnrollmentsOrderedById, "Sortowanie po ID"),
                 new OperationChartLine(OperationType.SelectEnrollmentsWithManySortParameters, "Wiele parametrów sortowania"),
             },
-            "Porównanie sortowania"
+            "Porównanie sortowania zapisów"
             )
         );
         charts.AddRange(GenerateComparisonChartsForEachDatabase(
@@ -137,7 +137,7 @@ public class ChartsGenerator
                 new OperationChartLine(OperationType.SelectEnrollmentsFilteredByStudentsLastName, "Filtrowanie po zawieraniu wartości tekstowej"),
                 new OperationChartLine(OperationType.SelectEnrollmentsWithManyFilters, "Złożone filtrowanie"),
             },
-            "Porównanie filtrowania",
+            "Porównanie filtrowania zapisów",
             isBarChart: true
             )
         );

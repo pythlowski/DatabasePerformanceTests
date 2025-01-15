@@ -9,7 +9,6 @@ using DatabasePerformanceTests.Utils.Config;
 using DatabasePerformanceTests.Utils.Config.Enums;
 using DatabasePerformanceTests.Utils.Factories;
 using DatabasePerformanceTests.Utils.Generators;
-using DatabasePerformanceTests.Utils.Generators.Models;
 using DatabasePerformanceTests.Utils.Tests.Models;
 
 namespace DatabasePerformanceTests.Utils.Tests;
@@ -98,7 +97,7 @@ public class TestsRunner
                     if (dataSize is null) throw new ArgumentNullException(nameof(dataSize));
                     await _operations.UpdateEnrollmentDatesAsync((int)dataSize);
                 },
-                dataSizes:new List<int?>{ 1000, 10_000, 100_000, 1_000_000 }
+                dataSizes:new List<int?>{ 1000, 10_000, 100_000 }
             ),
             new TestDefinition(
                 OperationType.SelectEnrollmentsOrderedById,
@@ -184,7 +183,7 @@ public class TestsRunner
                     if (pageNumber is null) throw new ArgumentNullException(nameof(pageNumber));
                     await _operations.SelectEnrollmentsWithPaginationAsync(100, (int)pageNumber);
                 },
-                dataSizes:new List<int?>{ 1, 5, 10, 20, 50, 100, 250, 500, 1000 }
+                dataSizes:new List<int?>{ 1, 5, 10, 20, 50, 100, 250, 500, 1000, 10_000, 100_000 }
             ),
             new TestDefinition(
                 OperationType.SelectEnrollmentsWithManySortParameters,
@@ -210,7 +209,7 @@ public class TestsRunner
                 
                 foreach (var context in _contexts)
                 {
-                    SystemResults systemResults = new();
+                    DatabaseStatistics databaseStatistics = new();
                     _operations = OperationsFactory.CreateOperations(context);
                     
                     int iterationErrors = 0;
@@ -234,7 +233,7 @@ public class TestsRunner
 
                             var testTime = (int)stopwatch.ElapsedMilliseconds;
                             Logger.Log($"Took {testTime} ms.");
-                            systemResults.RegisterTime(testTime);
+                            databaseStatistics.RegisterTime(testTime);
                         }
                         catch (Exception ex)
                         {
@@ -247,8 +246,8 @@ public class TestsRunner
                         }
                     }
 
-                    systemResults.CalculateResultParameters();
-                    operationResults.RegisterSystemResults(context.DatabaseSystem, systemResults);
+                    databaseStatistics.CalculateResultParameters();
+                    operationResults.RegisterSystemResults(context.DatabaseSystem, databaseStatistics);
                 }
                 results.Add(operationResults);
             }
