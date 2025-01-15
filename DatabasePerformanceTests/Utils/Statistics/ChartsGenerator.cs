@@ -226,6 +226,7 @@ public class ChartsGenerator
             }
             else
             {
+                myPlot.ShowLegend(Alignment.UpperLeft);
                 myPlot.XLabel(X_LABEL_N);
             }
 
@@ -258,7 +259,8 @@ public class ChartsGenerator
             new Tick(index+1, p.Value.Name)).ToArray();
         myPlot.Axes.Bottom.TickGenerator = new ScottPlot.TickGenerators.NumericManual(ticks);
         myPlot.Axes.Bottom.MajorTickStyle.Length = 0;        
-        
+        myPlot.ShowLegend(Alignment.UpperLeft);
+
         return myPlot;
     }
 
