@@ -43,7 +43,7 @@ public class StatisticsTablesGenerator
 
 
         List<LatexTableRow> latexRows = new();
-        latexRows.Add(new("Średnia", psqlStats.Average, mssqlStats.Average, mongoStats.Average, false));
+        latexRows.Add(new("Średnia", psqlStats.Average, mssqlStats.Average, mongoStats.Average, true));
         latexRows.Add(new("Mediana", psqlStats.Median, mssqlStats.Median, mongoStats.Median, true));
         latexRows.Add(new("Minimum", psqlStats.Minimum, mssqlStats.Minimum, mongoStats.Minimum, true));
         latexRows.Add(new("Maksimum", psqlStats.Maximum, mssqlStats.Maximum, mongoStats.Maximum, true));
