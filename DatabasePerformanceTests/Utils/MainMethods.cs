@@ -3,6 +3,7 @@ using DatabasePerformanceTests.Utils.Factories;
 using DatabasePerformanceTests.Utils.Files;
 using DatabasePerformanceTests.Utils.Generators;
 using DatabasePerformanceTests.Utils.Generators.Models;
+using DatabasePerformanceTests.Utils.Statistics;
 using DatabasePerformanceTests.Utils.Tests;
 
 namespace DatabasePerformanceTests.Utils;
@@ -48,13 +49,9 @@ public static class MainMethods
         }
     }
     
-    public static async Task AnalyzeResults(TestsConfig testsConfig, DatabaseConfig[] databaseConfigs)
+    public static async Task AnalyzeResults(TestsConfig testsConfig)
     {
         var results = TestResultsManager.ReadResultsFromFile(testsConfig.OutputDirectory);
-        foreach (var result in results)
-        {
-            Console.WriteLine(result);
-        }
 
         var chartsGenerator = new ChartsGenerator();
         chartsGenerator.GenerateCharts(results, testsConfig.OutputDirectory);

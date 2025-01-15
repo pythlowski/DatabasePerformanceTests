@@ -83,12 +83,10 @@ public class TestsRunner
                 OperationType.DeleteEnrollments,
                 async (databaseSystem, dataSize, parameters) =>
                 {
-                    if (databaseSystem == DatabaseSystem.Mongo && dataSize > 100_000) return; // won't work in a transaction
-                    
                     if (dataSize is null) throw new ArgumentNullException(nameof(dataSize));
                     await _operations.DeleteEnrollmentsAsync((int)dataSize);
                 },
-                dataSizes:new List<int?>{ 1000, 10_000, 100_000, 500_000 }
+                dataSizes:new List<int?>{ 1000, 10_000, 100_000 }
             ),
             new TestDefinition(
                 OperationType.UpdateEnrollments,

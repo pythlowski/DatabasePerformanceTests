@@ -41,7 +41,7 @@ namespace DatabasePerformanceTests
 
             string databaseName = "testdb_big";
             
-            string method = args.Length > 0 ? args[0] : "tests";
+            string method = args.Length > 0 ? args[0] : "analyze";
             switch (method.ToLower())
             {
                 case "create":
@@ -54,7 +54,7 @@ namespace DatabasePerformanceTests
                     await MainMethods.DropDatabases(databaseName, databaseConfigs);
                     break;
                 case "analyze":
-                    await MainMethods.AnalyzeResults(testsConfig, databaseConfigs);
+                    await MainMethods.AnalyzeResults(testsConfig);
                     break;
             }
         }

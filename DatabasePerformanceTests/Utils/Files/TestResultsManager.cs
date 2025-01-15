@@ -37,6 +37,7 @@ public class TestResultsManager
             return new();
         }
         
+        Console.WriteLine($"Reading result from latest file with name: {filePath}");
         var json = File.ReadAllText(filePath);
         return JsonSerializer.Deserialize<List<OperationResults>>(json, new JsonSerializerOptions
         {

@@ -1,23 +1,20 @@
 using DatabasePerformanceTests.Data.Operations;
 using DatabasePerformanceTests.Utils.Config.Enums;
+using DatabasePerformanceTests.Utils.Files;
 using DatabasePerformanceTests.Utils.Tests.Models;
 using ScottPlot;
 
-namespace DatabasePerformanceTests.Utils.Files;
+namespace DatabasePerformanceTests.Utils.Statistics;
 
 public class ChartsGenerator
 {
     private static readonly string CHARTS_DIRECTORY_NAME = "Plots";
-    private static readonly string X_LABEL_N = "Liczba N";
+    private static readonly string X_LABEL_N = "Rozmiar danych";
     private static readonly string Y_LABEL_TIME = "Czas (ms)";
     
 
     private static readonly Dictionary<DatabaseSystem, DatabaseSystemChartProperties> _systemChartProperties = new()
     {
-        {
-            DatabaseSystem.Mongo, 
-            new DatabaseSystemChartProperties { Name = "MongoDB", Color = new Color(0, 255, 0) }
-        },
         {
             DatabaseSystem.Postgres,
             new DatabaseSystemChartProperties { Name = "PostgreSQL", Color = new Color(0, 0, 255) }
@@ -25,6 +22,10 @@ public class ChartsGenerator
         {
             DatabaseSystem.MsSql,
             new DatabaseSystemChartProperties { Name = "MS SQL Server", Color = new Color(255, 0, 0) }
+        },
+        {
+            DatabaseSystem.Mongo, 
+            new DatabaseSystemChartProperties { Name = "MongoDB", Color = new Color(0, 255, 0) }
         }
     };
         
@@ -116,15 +117,14 @@ public class ChartsGenerator
                 chartTitle:"Pobieranie listy zapisów sortowanych po wielu wartościach", xLabel:X_LABEL_N)
         ));
         
-        charts.AddRange(GenerateSortingComparisonCharts(results));
         charts.AddRange(GenerateComparisonChartsForEachDatabase(
             results, 
             new ()
             {
-                new OperationChartLine(OperationType.SelectStudentsOrderedById, "Sortowanie po ID"),
+                new OperationChartLine(OperationType.SelectEnrollmentsOrderedById, "Sortowanie po ID"),
                 new OperationChartLine(OperationType.SelectEnrollmentsWithManySortParameters, "Wiele parametrów sortowania"),
             },
-            "Porównianie sortowania"
+            "Porównanie sortowania"
             )
         );
         charts.AddRange(GenerateComparisonChartsForEachDatabase(
@@ -137,7 +137,8 @@ public class ChartsGenerator
                 new OperationChartLine(OperationType.SelectEnrollmentsFilteredByStudentsLastName, "Filtrowanie po zawieraniu wartości tekstowej"),
                 new OperationChartLine(OperationType.SelectEnrollmentsWithManyFilters, "Złożone filtrowanie"),
             },
-            "Porównianie fitrowania"
+            "Porównanie filtrowania",
+            isBarChart: true
             )
         );
         charts.AddRange(GenerateComparisonChartsForEachDatabase(
@@ -156,64 +157,18 @@ public class ChartsGenerator
         string fileDirectory = GetFileDirectory(outputDirectory);
         Directory.CreateDirectory(fileDirectory);
 
-        foreach (var chartData in charts)
+        foreach (var (chartData, index) in charts.Select((c, i) => (c, i)))
         {
-            string filePath = Path.Combine(fileDirectory, chartData.FileName + ".png");
+            string filePath = Path.Combine(fileDirectory, $"{index+1}." + chartData.FileName + ".png");
             chartData.Plot.SavePng(filePath, 900, 600);
-        }
-    }
-
-    private IEnumerable<ChartData> GenerateSortingComparisonCharts(List<OperationResults> results)
-    {
-        var orderByIdResults = results
-            .Where(r => r.OperationType == OperationType.SelectEnrollmentsOrderedById)
-            .OrderBy(r => r.DataSize);
-
-        var manySortParametersResults = results
-            .Where(r => r.OperationType == OperationType.SelectEnrollmentsWithManySortParameters)
-            .OrderBy(r => r.DataSize);
-
-        var orderByIdDataSizes = orderByIdResults.Select(r => r.DataSize);
-        var manySortParametersResultsDataSizes = manySortParametersResults.Select(r => r.DataSize);
-        var commonDataSizes = orderByIdDataSizes.Intersect(manySortParametersResultsDataSizes).ToArray();
-        
-        foreach (var databaseSystem in _systemChartProperties.Keys)
-        {
-            Plot plt = new();
-            
-            var orderByIdTimes = commonDataSizes.Select(dataSize => orderByIdResults
-                .Where(r => r.DataSize == dataSize)
-                .Select(r => r.Results[databaseSystem].Average)
-                .FirstOrDefault()
-            ).ToArray();
-            
-            var orderByIdScatter = plt.Add.Scatter(commonDataSizes, orderByIdTimes);;
-            orderByIdScatter.LegendText = "Sortowanie po ID";
-            
-            var manySortParametersTimes = commonDataSizes.Select(dataSize => manySortParametersResults
-                .Where(r => r.DataSize == dataSize)
-                .Select(r => r.Results[databaseSystem].Average)
-                .FirstOrDefault()
-            ).ToArray();
-            
-            var manySortParametersScatter = plt.Add.Scatter(commonDataSizes, manySortParametersTimes);
-            manySortParametersScatter.LegendText = "Wiele parametrów sortowania";
-
-            plt.Title($"Porównianie sortowania - {_systemChartProperties[databaseSystem].Name}");
-            plt.XLabel(X_LABEL_N);
-            plt.YLabel(Y_LABEL_TIME);
-
-            yield return new( 
-                fileName:$"SortingComparison_{databaseSystem}",
-                plot:plt
-            );
         }
     }
     
     private IEnumerable<ChartData> GenerateComparisonChartsForEachDatabase(
         List<OperationResults> results,
         List<OperationChartLine> operationLines,
-        string chartTitle)
+        string chartTitle,
+        bool isBarChart = false)
     {
         var resultsByOperationType = operationLines
             .ToDictionary(
@@ -223,17 +178,20 @@ public class ChartsGenerator
                     .OrderBy(r => r.DataSize)
             );
 
-        var commonDataSizes = resultsByOperationType
-            .Values
-            .Select(operationResults => operationResults.Select(r => r.DataSize))
+        var commonDataSizes = resultsByOperationType.Values
+            .Select(operationResults => 
+                operationResults
+                    .Where(r => r.Results.All(dbr => dbr.Value.Average > 0))
+                    .Select(r => r.DataSize)
+            )
             .Aggregate((current, next) => current.Intersect(next))
             .ToArray();
 
         foreach (var databaseSystem in _systemChartProperties.Keys)
         {
-            Plot plt = new();
-
-            foreach (var operationLine in operationLines)
+            Plot myPlot = new();
+            
+            foreach (var (operationLine, index) in operationLines.Select((o, i) => (o, i)))
             {
                 var operationResults = resultsByOperationType[operationLine.OperationType];
                 var times = commonDataSizes.Select(dataSize => operationResults
@@ -241,18 +199,39 @@ public class ChartsGenerator
                     .Select(r => r.Results[databaseSystem].Average)
                     .FirstOrDefault()
                 ).ToArray();
-
-                var scatter = plt.Add.Scatter(commonDataSizes, times);
-                scatter.LegendText = operationLine.Label;
+                
+                if (isBarChart)
+                {
+                    myPlot.Add.Bar(position:index+1, value:times.First());
+                }
+                else
+                {
+                    var scatter = myPlot.Add.Scatter(commonDataSizes, times);
+                    scatter.LegendText = operationLine.Label;
+                    scatter.LineWidth = 3;
+                }
             }
 
-            plt.Title($"{chartTitle} - {_systemChartProperties[databaseSystem].Name}");
-            plt.XLabel(X_LABEL_N);
-            plt.YLabel(Y_LABEL_TIME);
+            myPlot.Title($"{chartTitle} - {_systemChartProperties[databaseSystem].Name}");
+            myPlot.YLabel(Y_LABEL_TIME);
+
+            if (isBarChart)
+            {
+                myPlot.Axes.Margins(bottom: 0);
+                Tick[] ticks = operationLines.Select((line, index) => 
+                    new Tick(index+1, line.Label.Replace(' ', '\n'))).ToArray();
+                myPlot.Axes.Bottom.TickGenerator = new ScottPlot.TickGenerators.NumericManual(ticks);
+                myPlot.Axes.Bottom.MajorTickStyle.Length = 0;
+                myPlot.ShowLegend(Alignment.UpperLeft);
+            }
+            else
+            {
+                myPlot.XLabel(X_LABEL_N);
+            }
 
             yield return new ChartData(
                 fileName: $"Comparison_{chartTitle.Replace(' ', '_')}_{databaseSystem}",
-                plot: plt
+                plot: myPlot
             );
         }
     }
@@ -260,32 +239,41 @@ public class ChartsGenerator
     private Plot GenerateBarChartForAllDatabases(List<OperationResults> results, OperationType operationType, string chartTitle)
     {
         var operationResults = results
-            .Where(r => r.OperationType == operationType)
-            .FirstOrDefault() ?? throw new InvalidDataException();
+            .FirstOrDefault(r => r.OperationType == operationType) ?? throw new InvalidDataException();
         
-        Plot plt = new();
+        Plot myPlot = new();
 
-        foreach (var databaseSystem in _systemChartProperties.Keys)
+        foreach (var (databaseSystem, index) in _systemChartProperties.Keys.Select((ds, i) => (ds, i)))
         {
-            var bar = plt.Add.Bars(new[] { operationResults.Results[databaseSystem].Average });
-            bar.LegendText = _systemChartProperties[databaseSystem].Name;
+            var bar = myPlot.Add.Bar(position:index+1, value:operationResults.Results[databaseSystem].Average);
+            // bar.LegendText = _systemChartProperties[databaseSystem].Name;
             bar.Color = _systemChartProperties[databaseSystem].Color;
         }
         
-        plt.ShowLegend(Alignment.UpperLeft);
-        return plt;
+        myPlot.Title(chartTitle);
+        myPlot.YLabel(Y_LABEL_TIME);
+        
+        myPlot.Axes.Margins(bottom: 0);
+        Tick[] ticks = _systemChartProperties.Select((p, index) => 
+            new Tick(index+1, p.Value.Name)).ToArray();
+        myPlot.Axes.Bottom.TickGenerator = new ScottPlot.TickGenerators.NumericManual(ticks);
+        myPlot.Axes.Bottom.MajorTickStyle.Length = 0;        
+        
+        return myPlot;
     }
 
     private Plot GenerateLineChartForAllSystemsWithManyDataSizes(List<OperationResults> results, 
         OperationType operationType, string chartTitle, string xLabel)
     {
         var operationResults = results
-            .Where(r => r.OperationType == operationType)
+            .Where(r => r.OperationType == operationType 
+                        && r.Results.All(r => r.Value.Average > 0)
+            )
             .OrderBy(r => r.DataSize);
         
         var dataSizes = operationResults.Select(r => r.DataSize).ToArray();
 
-        Plot plt = new();
+        Plot myPlot = new();
         
         foreach (var databaseSystem in _systemChartProperties.Keys)
         {
@@ -293,15 +281,17 @@ public class ChartsGenerator
                 .Select(r => r.Results[databaseSystem].Average)
                 .ToArray();
             
-            var scatter = plt.Add.Scatter(dataSizes, times, _systemChartProperties[databaseSystem].Color);;
+            var scatter = myPlot.Add.Scatter(dataSizes, times, _systemChartProperties[databaseSystem].Color);
             scatter.LegendText = _systemChartProperties[databaseSystem].Name;
+            scatter.LineWidth = 3;
         }
         
-        plt.Title(chartTitle);
-        plt.XLabel(xLabel);
-        plt.YLabel(Y_LABEL_TIME);
-        
-        return plt;
+        myPlot.Title(chartTitle);
+        myPlot.XLabel(xLabel);
+        myPlot.YLabel(Y_LABEL_TIME);
+        myPlot.ShowLegend(Alignment.UpperLeft);
+
+        return myPlot;
     }
 
     private static string GetFileDirectory(string outputDirectory)
