@@ -108,7 +108,7 @@ public class ChartsGenerator
         charts.Add(new( 
             fileName:OperationType.SelectEnrollmentsWithPagination.ToString(),
             plot:GenerateLineChartForAllSystemsWithManyDataSizes(results, OperationType.SelectEnrollmentsWithPagination, 
-                chartTitle:"Pobieranie listy zapisów z paginacją", xLabel:"Numer strony N")
+                chartTitle:"Pobieranie listy zapisów z paginacją", xLabel:X_LABEL_N)
         ));
         
         charts.Add(new( 
