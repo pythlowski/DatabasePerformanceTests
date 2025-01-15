@@ -60,8 +60,7 @@ public class TestsRunner
                 async (databaseSystem, dataSize, parameters) =>
                 {
                     await _operations.SelectStudentByIdAsync(generatorConfig.StudentsCount / 2);
-                },
-                dataSizes:new List<int?>{ 1, 500_000, 1_000_000 }
+                }
             ),
             new TestDefinition(
                 OperationType.SelectStudentsOrderedById,
