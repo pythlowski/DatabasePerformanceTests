@@ -1,4 +1,11 @@
 {
+  "DataGenerator": {
+    "StudentsCount": 1000,
+    "InstructorsCount": 500,
+    "CoursesCount": 1000,
+    "CourseInstancesPerCourse": 10,
+    "EnrollmentsPerStudent": 10
+  },
   "Connections": [
     {
       "Name": "",
@@ -7,6 +14,7 @@
     }
   ],
      "Tests": {
+        "DatabaseName": "",
        "Iterations": 30,
        "OutputDirectory": ""
      } 

@@ -1,5 +1,6 @@
 using Bogus;
 using DatabasePerformanceTests.Data.Models.Domain;
+using DatabasePerformanceTests.Utils.Config;
 using DatabasePerformanceTests.Utils.Generators.Models;
 
 namespace DatabasePerformanceTests.Utils.Generators;

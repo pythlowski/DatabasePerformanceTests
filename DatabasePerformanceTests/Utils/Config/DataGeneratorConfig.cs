@@ -1,4 +1,4 @@
-namespace DatabasePerformanceTests.Utils.Generators.Models;
+namespace DatabasePerformanceTests.Utils.Config;
 
 public class DataGeneratorConfig
 { 

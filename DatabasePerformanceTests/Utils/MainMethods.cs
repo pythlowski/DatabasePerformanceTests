@@ -2,7 +2,6 @@ using DatabasePerformanceTests.Utils.Config;
 using DatabasePerformanceTests.Utils.Factories;
 using DatabasePerformanceTests.Utils.Files;
 using DatabasePerformanceTests.Utils.Generators;
-using DatabasePerformanceTests.Utils.Generators.Models;
 using DatabasePerformanceTests.Utils.Statistics;
 using DatabasePerformanceTests.Utils.Tests;
 

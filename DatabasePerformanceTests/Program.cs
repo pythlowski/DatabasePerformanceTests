@@ -1,7 +1,5 @@
 ﻿using DatabasePerformanceTests.Utils;
 using DatabasePerformanceTests.Utils.Config;
-using DatabasePerformanceTests.Utils.Config.Enums;
-using DatabasePerformanceTests.Utils.Generators.Models;
 using Microsoft.Extensions.Configuration;
 
 namespace DatabasePerformanceTests
@@ -16,30 +14,14 @@ namespace DatabasePerformanceTests
 
             var testsConfig = configuration.GetSection("Tests").Get<TestsConfig>()
                               ?? throw new InvalidDataException("appsettings.json configuration file requires Tests section");
+            
+            var dataGeneratorConfig = configuration.GetSection("DataGenerator").Get<DataGeneratorConfig>()
+                                      ?? throw new InvalidDataException("appsettings.json configuration file requires DataGenerator section");
+            
             var databaseConfigs = configuration.GetSection("Connections").Get<DatabaseConfig[]>() 
                                   ?? throw new InvalidDataException("appsettings.json configuration requires Connections section");
 
-            // databaseConfigs = databaseConfigs.Where(c => c.System == DatabaseSystem.Postgres).ToArray();
-            
-            DataGeneratorConfig dataGeneratorConfig = new()
-            {
-                StudentsCount = 1_000_000,
-                InstructorsCount = 500,
-                CoursesCount = 1000,
-                CourseInstancesPerCourse = 10,
-                EnrollmentsPerStudent = 10
-            };
-            
-            // DataGeneratorConfig dataGeneratorConfig = new()
-            // {
-            //     StudentsCount = 1000,
-            //     InstructorsCount = 5,
-            //     CoursesCount = 100,
-            //     CourseInstancesPerCourse = 2,
-            //     EnrollmentsPerStudent = 10
-            // };
-
-            string databaseName = "testdb_big";
+            string databaseName = testsConfig.DatabaseName;
             
             string method = args.Length > 0 ? args[0] : "analyze";
             switch (method.ToLower())

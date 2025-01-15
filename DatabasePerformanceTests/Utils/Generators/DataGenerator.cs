@@ -1,4 +1,5 @@
 using DatabasePerformanceTests.Data.Models.Mongo;
+using DatabasePerformanceTests.Utils.Config;
 using DatabasePerformanceTests.Utils.Generators.Models;
 
 namespace DatabasePerformanceTests.Utils.Generators;

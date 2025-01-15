@@ -5,6 +5,7 @@ using DatabasePerformanceTests.Data.Models.Domain;
 using DatabasePerformanceTests.Data.Models.Mongo;
 using DatabasePerformanceTests.Data.Operations;
 using DatabasePerformanceTests.Data.Operations.Interfaces;
+using DatabasePerformanceTests.Utils.Config;
 using DatabasePerformanceTests.Utils.Config.Enums;
 using DatabasePerformanceTests.Utils.Factories;
 using DatabasePerformanceTests.Utils.Generators;
