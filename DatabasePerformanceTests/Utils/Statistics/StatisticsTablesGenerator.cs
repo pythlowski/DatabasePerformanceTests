@@ -21,101 +21,168 @@ public class StatisticsTablesGenerator
         }
     }
     
-    public void GenerateStatisticsTablesInLatex(List<OperationResults> results, OperationType? operationType = null)
+    public void GenerateStatisticsTablesInLatex(List<OperationResults> results)
     {
-        foreach (var result in results.Where(r => operationType is null || r.OperationType == operationType))
-        {
+        foreach (var result in results)
+        { 
+            
             Console.WriteLine($"{result.OperationType} for data size {result.DataSize}:");
-            Console.WriteLine(GenerateStatisticsTableInLatex(result));
+            var latexTable = GenerateStatisticsTableInLatex(result);
+            Console.WriteLine(latexTable);
             Console.WriteLine("\n\n--------------------------------------\n\n");
+        }
+
+        foreach (var databaseSystem in Enum.GetValues(typeof(DatabaseSystem)).Cast<DatabaseSystem>())
+        {
+            var sortTables = GenerateStatisticsTableInLatex(
+                results, 
+                new List<OperationType>
+                {
+                    OperationType.SelectEnrollmentsOrderedById,
+                    OperationType.SelectEnrollmentsWithManySortParameters,
+                },
+                new() { "Sortowanie po ID", "Wiele parametrów sortowania" },
+                databaseSystem
+            );
+            
+            var filterTable = GenerateStatisticsTableInLatex(
+                results, 
+                new List<OperationType>
+                {
+                    OperationType.SelectEnrollmentsFilteredByIsActive,
+                    OperationType.SelectEnrollmentsFilteredByEnrollmentDate,
+                    OperationType.SelectEnrollmentsFilteredByBudget,
+                    OperationType.SelectEnrollmentsFilteredByStudentsLastName,
+                    OperationType.SelectEnrollmentsWithManyFilters,
+                },
+                new() { "Po wartości logicznej", "Po zakresie dat", "Po wartości liczbowej", "Po zawieraniu tekstu", "Wiele parametrów filtrowania" },
+                databaseSystem,
+                useSeconds: true
+            ).First();
+            
+            Console.WriteLine(databaseSystem);
+            Console.WriteLine(filterTable);
+            Console.WriteLine("\n\n--------------------------------------\n\n");
+
+            foreach (var sortTable in sortTables)
+            {
+                Console.WriteLine(sortTable);
+                Console.WriteLine("\n\n--------------------------------------\n\n");
+            }
+        }
+        
+    }
+
+    private IEnumerable<string> GenerateStatisticsTableInLatex(List<OperationResults> results,
+        List<OperationType> operationTypes, List<string> columnLabels,
+        DatabaseSystem databaseSystem, bool useSeconds = false)
+    {
+        var allDataSizeOperationResults = results
+            .Where(r => operationTypes.Contains(r.OperationType))
+            // .Select(r => r.Results[databaseSystem])
+            .ToList();
+        
+        var dataSizes = allDataSizeOperationResults
+            .Select(r => r.DataSize)
+            .Distinct().ToList();
+
+        foreach (var dataSize in dataSizes)
+        {
+            var statistics = allDataSizeOperationResults
+                .Where(r => r.DataSize == dataSize)
+                .Select(r => r.Results[databaseSystem])
+                .ToList();
+            
+            yield return GenerateStatisticsTableInLatex(statistics, columnLabels, $"Datasize {dataSize}", useSeconds);
         }
     }
 
-    private string GenerateStatisticsTableInLatex(OperationResults operationResults)
+    private string GenerateStatisticsTableInLatex(OperationResults results)
     {
-        var psqlStats = operationResults.Results[DatabaseSystem.Postgres];
-        psqlStats.CalculateResultParameters();
-        
-        var mssqlStats = operationResults.Results[DatabaseSystem.MsSql];
-        mssqlStats.CalculateResultParameters();
-        
-        var mongoStats = operationResults.Results[DatabaseSystem.Mongo];
-        mongoStats.CalculateResultParameters();
+        List<DatabaseStatistics> statistics = new()
+        {
+            results.Results[DatabaseSystem.Postgres],
+            results.Results[DatabaseSystem.MsSql],
+            results.Results[DatabaseSystem.Mongo]
+        };
+        return GenerateStatisticsTableInLatex(statistics, new() { "PostgreSQL", "MSSQL", "MongoDB" });
+    }
 
-
+    private string GenerateStatisticsTableInLatex(List<DatabaseStatistics> statistics, List<string> columnLabels, string caption = null, bool useSeconds = false)
+    {
+        foreach (var s in statistics)
+        {
+            s.CalculateResultParameters();
+        }
+        
         List<LatexTableRow> latexRows = new();
-        latexRows.Add(new("Średnia", psqlStats.Average, mssqlStats.Average, mongoStats.Average, true));
-        latexRows.Add(new("Mediana", psqlStats.Median, mssqlStats.Median, mongoStats.Median, true));
-        latexRows.Add(new("Minimum", psqlStats.Minimum, mssqlStats.Minimum, mongoStats.Minimum, true));
-        latexRows.Add(new("Maksimum", psqlStats.Maximum, mssqlStats.Maximum, mongoStats.Maximum, true));
-        latexRows.Add(new("Odch. std.", psqlStats.StandardDeviation, mssqlStats.StandardDeviation, mongoStats.StandardDeviation, true));
-        latexRows.Add(new("1. kwartyl", psqlStats.Q1, mssqlStats.Q1, mongoStats.Q1, true));
-        latexRows.Add(new("3. kwartyl", psqlStats.Q3, mssqlStats.Q3, mongoStats.Q3, true));
+        latexRows.Add(new("Średnia", statistics.Select(s => s.Average).ToArray(), true, useSeconds));
+        latexRows.Add(new("Mediana", statistics.Select(s => s.Median).ToArray(), true, useSeconds));
+        latexRows.Add(new("Minimum", statistics.Select(s => s.Minimum).ToArray(), true, useSeconds));
+        latexRows.Add(new("Maksimum", statistics.Select(s => s.Maximum).ToArray(), true, useSeconds));
+        latexRows.Add(new("Odch. std.", statistics.Select(s => s.StandardDeviation).ToArray(), true, useSeconds));
+        latexRows.Add(new("1. kwartyl", statistics.Select(s => s.Q1).ToArray(), true, useSeconds));
+        latexRows.Add(new("3. kwartyl", statistics.Select(s => s.Q3).ToArray(), true, useSeconds));
+        
+        return GenerateStatisticsTableInLatex(latexRows, columnLabels, caption);
+    }
+    
+    private string GenerateStatisticsTableInLatex(List<LatexTableRow> latexRows, List<string> columnLabels, string caption = null)
+    {
+        var columnsCount = latexRows.Max(r => r.RowValues.Count);
+        double columnWidthCm = columnsCount switch
+        {
+            2 => 3,
+            3 => 2.5,
+            _ => 2
+        };
         
         var sb = new StringBuilder();
         sb.Append("\\begin{table}[H]\n");
         sb.Append("\\centering\n");
-        sb.Append("\\begin{tabular}{|>{\\columncolor[gray]{0.9}\\centering\\arraybackslash}p{3cm}|>{\\centering\\arraybackslash}p{2.5cm}|>{\\centering\\arraybackslash}p{2.5cm}|>{\\centering\\arraybackslash}p{2.5cm}|}\n");
+        sb.Append("\\begin{tabular}{|>{\\columncolor[gray]{0.9}\\centering\\arraybackslash}p{3cm}|");
+        sb.Append(string.Join("|", Enumerable.Repeat($">{{\\centering\\arraybackslash}}p{{{columnWidthCm}cm}}", columnsCount)));
+        sb.Append("|}\n");
         sb.Append("\\rowcolor{gray!40}\n");
         sb.Append("\\hline\n");
-        sb.Append("Metryka & PostgreSQL & MSSQL & MongoDB \\\\ \\hline\n");
+        sb.Append("Metryka & ");
+        sb.Append(string.Join(" & ", columnLabels));
+        sb.Append("\\\\ \\hline\n");
 
         foreach (var row in latexRows)
         {
-            sb.Append(string.Join(" & ", new[]
-            {
-                row.Metric,
-                row.PostgresRowValue.GetFullLatexCode(),
-                row.MsSqlRowValue.GetFullLatexCode(),
-                row.MongoRowValue.GetFullLatexCode(),
-            }));
+            sb.Append(string.Join(" & ", 
+                new[] { row.MetricName }
+                    .Concat(row.RowValues.Select(value => value.GetFullLatexCode()))
+            ));
             sb.Append(" \\\\ \\hline\n");
         }
-        // sb.Append($"Średnia & {psqlStats.Average:F2} ms & {mssqlStats.Average:F2} ms & {mongoStats.Average:F2} ms \\\\ \\hline\n");
-        // sb.Append($"Mediana & {psqlStats.Median:F2} ms & {mssqlStats.Median:F2} ms & {mongoStats.Median:F2} ms \\\\ \\hline\n");
-        // sb.Append($"Minimum & {psqlStats.Minimum:F2} ms & {mssqlStats.Minimum:F2} ms & {mongoStats.Minimum:F2} ms \\\\ \\hline\n");
-        // sb.Append($"Maksimum & {psqlStats.Maximum:F2} ms & {mssqlStats.Maximum:F2} ms & {mongoStats.Maximum:F2} ms \\\\ \\hline\n");
-        // sb.Append($"Odch. std. & {psqlStats.StandardDeviation:F2} ms & {mssqlStats.StandardDeviation:F2} ms & {mongoStats.StandardDeviation:F2} ms \\\\ \\hline\n");
-        // sb.Append($"1. kwartyl & {psqlStats.Q1:F2} ms & {mssqlStats.Q1:F2} ms & {mongoStats.Q1:F2} ms \\\\ \\hline\n");
-        // sb.Append($"3. kwartyl & {psqlStats.Q3:F2} ms & {mssqlStats.Q3:F2} ms & {mongoStats.Q3:F2} ms \\\\ \\hline\n");
-
+        
         sb.Append("\\end{tabular}\n");
-        sb.Append($"\\caption{{Statystyki operacji dla {(operationResults.DataSize < 10000 ? "małego" : "dużego")} zbioru danych (N = {operationResults.DataSize})}}\n");
+        sb.Append($"\\caption{{{caption}}}\n");
         sb.Append("\\end{table}\n");
 
         return sb.ToString();
     }
 }
 
+
+
 public class LatexTableRow
 {
-    public LatexTableRow(string metric, double psqlValue, double mssqlValue, double mongoValue, bool isLowerValueBetter)
+    public LatexTableRow(string metricName, double[] values, bool isLowerValueBetter, bool useSeconds = false)
     {
-        Metric = metric;
-        
-        PostgresRowValue = new(
-            value: psqlValue,
+        MetricName = metricName;
+        RowValues = values.Select(value => new LatexTableRowValue(
+            value: value,
             isLowerValueBetter: isLowerValueBetter,
-            comparedValues: new[] { mssqlValue, mongoValue }
-        );
-        
-        MsSqlRowValue = new(
-            value: mssqlValue,
-            isLowerValueBetter: isLowerValueBetter,
-            comparedValues: new[] { psqlValue, mongoValue }
-        );
-        
-        MongoRowValue = new(
-            value: mongoValue,
-            isLowerValueBetter: isLowerValueBetter,
-            comparedValues: new[] { psqlValue, mssqlValue }
-        );
+            comparedValues: values.Where(e => e != value).ToArray(),
+            useSeconds: useSeconds
+        )).ToList();
     }
 
-    public string Metric { get; set; }
-    public LatexTableRowValue PostgresRowValue { get; set; }
-    public LatexTableRowValue MsSqlRowValue { get; set; }
-    public LatexTableRowValue MongoRowValue { get; set; }
+    public string MetricName { get; set; }
+    public List<LatexTableRowValue> RowValues { get; set; }
 }
 
 public class LatexTableRowValue 
@@ -123,9 +190,11 @@ public class LatexTableRowValue
     private static readonly string BEST_VALUE_COMMAND = "\\cellcolor{green!25}";
     private static readonly string WORST_VALUE_COMMAND = "\\cellcolor{red!25}";
 
-    public LatexTableRowValue(double value, bool isLowerValueBetter, double[] comparedValues)
+    public  LatexTableRowValue(double value, bool isLowerValueBetter, double[] comparedValues, bool useSeconds = false)
     {
         Value = value;
+        UseSeconds = useSeconds;
+        
         if (
             (isLowerValueBetter && IsLowest(value, comparedValues))
             ||
@@ -147,10 +216,11 @@ public class LatexTableRowValue
 
     public double Value { get; set; }
     public string? HighlightCommand { get; set; }
+    public bool UseSeconds { get; set; }
 
     public string GetFullLatexCode()
     {
-        return $"{HighlightCommand} {Value:F2} ms";
+        return $"{HighlightCommand} \\numprint{{{(UseSeconds ? Value/1000 : Value):F2}}} {(UseSeconds ? "s" : "ms")}";
     }
     
     private bool IsHighest(double value, double[] comparedValues)
