@@ -1,4 +1,5 @@
 using System.Text;
+using DatabasePerformanceTests.Data.Operations;
 using DatabasePerformanceTests.Utils.Config.Enums;
 using DatabasePerformanceTests.Utils.Tests.Models;
 
@@ -20,9 +21,9 @@ public class StatisticsTablesGenerator
         }
     }
     
-    public void GenerateStatisticsTablesInLatex(List<OperationResults> results)
+    public void GenerateStatisticsTablesInLatex(List<OperationResults> results, OperationType? operationType = null)
     {
-        foreach (var result in results)
+        foreach (var result in results.Where(r => operationType is null || r.OperationType == operationType))
         {
             Console.WriteLine($"{result.OperationType} for data size {result.DataSize}:");
             Console.WriteLine(GenerateStatisticsTableInLatex(result));
