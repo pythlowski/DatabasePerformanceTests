@@ -34,6 +34,27 @@ public class StatisticsTablesGenerator
 
         foreach (var databaseSystem in Enum.GetValues(typeof(DatabaseSystem)).Cast<DatabaseSystem>())
         {
+            var crudTables = GenerateStatisticsTableInLatex(
+                results, 
+                new List<OperationType>
+                {
+                    OperationType.BulkInsertEnrollments,
+                    OperationType.UpdateEnrollments,
+                    OperationType.DeleteEnrollments,
+                    OperationType.SelectEnrollmentsOrderedById,
+                },
+                new() { "Insert", "Update", "Delete", "Select" },
+                databaseSystem,
+                useSeconds: false
+            );
+            
+            foreach (var crudTable in crudTables)
+            {
+                Console.WriteLine(databaseSystem);
+                Console.WriteLine(crudTable);
+                Console.WriteLine("\n\n--------------------------------------\n\n");
+            }
+            
             var sortTables = GenerateStatisticsTableInLatex(
                 results, 
                 new List<OperationType>
@@ -63,9 +84,10 @@ public class StatisticsTablesGenerator
             Console.WriteLine(databaseSystem);
             Console.WriteLine(filterTable);
             Console.WriteLine("\n\n--------------------------------------\n\n");
-
+            
             foreach (var sortTable in sortTables)
             {
+                Console.WriteLine(databaseSystem);
                 Console.WriteLine(sortTable);
                 Console.WriteLine("\n\n--------------------------------------\n\n");
             }
