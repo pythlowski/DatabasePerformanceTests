@@ -127,7 +127,7 @@ public class TestsRunner
                 parameters:new Dictionary<string, object>
                 {
                     { "DateFrom", new DateTime(2020, 1, 1) }, 
-                    { "DateTo", new DateTime(2021, 1, 1) }
+                    { "DateTo", new DateTime(2025, 1, 1) }
                 }
             ),
             new TestDefinition(

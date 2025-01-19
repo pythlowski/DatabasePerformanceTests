@@ -141,7 +141,7 @@ public class MssqlDbOperations(MssqlDbContext context) : IDbOperations
             JOIN CourseInstances ci ON e.CourseInstanceId = ci.CourseInstanceId
             JOIN Courses c ON ci.CourseId = c.CourseId
             JOIN Instructors i ON ci.InstructorId = i.InstructorId
-            where s.StudentId = {studentId}";
+            WHERE s.StudentId = {studentId}";
         var data = await context.ExecuteReaderAsync(query, true);
         return data.Select(row => new CourseInstanceBaseResult(
             (int)row["CourseInstanceId"],

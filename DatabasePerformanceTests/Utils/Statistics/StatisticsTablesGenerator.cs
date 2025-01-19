@@ -23,14 +23,14 @@ public class StatisticsTablesGenerator
     
     public void GenerateStatisticsTablesInLatex(List<OperationResults> results)
     {
-        foreach (var result in results)
-        { 
-            
-            Console.WriteLine($"{result.OperationType} for data size {result.DataSize}:");
-            var latexTable = GenerateStatisticsTableInLatex(result);
-            Console.WriteLine(latexTable);
-            Console.WriteLine("\n\n--------------------------------------\n\n");
-        }
+        // foreach (var result in results)
+        // { 
+        //     
+        //     Console.WriteLine($"{result.OperationType} for data size {result.DataSize}:");
+        //     var latexTable = GenerateStatisticsTableInLatex(result);
+        //     Console.WriteLine(latexTable);
+        //     Console.WriteLine("\n\n--------------------------------------\n\n");
+        // }
 
         foreach (var databaseSystem in Enum.GetValues(typeof(DatabaseSystem)).Cast<DatabaseSystem>())
         {
@@ -55,42 +55,42 @@ public class StatisticsTablesGenerator
                 Console.WriteLine("\n\n--------------------------------------\n\n");
             }
             
-            var sortTables = GenerateStatisticsTableInLatex(
-                results, 
-                new List<OperationType>
-                {
-                    OperationType.SelectEnrollmentsOrderedById,
-                    OperationType.SelectEnrollmentsWithManySortParameters,
-                },
-                new() { "Sortowanie po ID", "Wiele parametrów sortowania" },
-                databaseSystem
-            );
-            
-            var filterTable = GenerateStatisticsTableInLatex(
-                results, 
-                new List<OperationType>
-                {
-                    OperationType.SelectEnrollmentsFilteredByIsActive,
-                    OperationType.SelectEnrollmentsFilteredByEnrollmentDate,
-                    OperationType.SelectEnrollmentsFilteredByBudget,
-                    OperationType.SelectEnrollmentsFilteredByStudentsLastName,
-                    OperationType.SelectEnrollmentsWithManyFilters,
-                },
-                new() { "Po wartości logicznej", "Po zakresie dat", "Po wartości liczbowej", "Po zawieraniu tekstu", "Wiele parametrów filtrowania" },
-                databaseSystem,
-                useSeconds: true
-            ).First();
-            
-            Console.WriteLine(databaseSystem);
-            Console.WriteLine(filterTable);
-            Console.WriteLine("\n\n--------------------------------------\n\n");
-            
-            foreach (var sortTable in sortTables)
-            {
-                Console.WriteLine(databaseSystem);
-                Console.WriteLine(sortTable);
-                Console.WriteLine("\n\n--------------------------------------\n\n");
-            }
+            // var sortTables = GenerateStatisticsTableInLatex(
+            //     results, 
+            //     new List<OperationType>
+            //     {
+            //         OperationType.SelectEnrollmentsOrderedById,
+            //         OperationType.SelectEnrollmentsWithManySortParameters,
+            //     },
+            //     new() { "Sortowanie po ID", "Wiele parametrów sortowania" },
+            //     databaseSystem
+            // );
+            //
+            // var filterTable = GenerateStatisticsTableInLatex(
+            //     results, 
+            //     new List<OperationType>
+            //     {
+            //         OperationType.SelectEnrollmentsFilteredByIsActive,
+            //         OperationType.SelectEnrollmentsFilteredByEnrollmentDate,
+            //         OperationType.SelectEnrollmentsFilteredByBudget,
+            //         OperationType.SelectEnrollmentsFilteredByStudentsLastName,
+            //         OperationType.SelectEnrollmentsWithManyFilters,
+            //     },
+            //     new() { "Po wartości logicznej", "Po zakresie dat", "Po wartości liczbowej", "Po zawieraniu tekstu", "Wiele parametrów filtrowania" },
+            //     databaseSystem,
+            //     useSeconds: true
+            // ).First();
+            //
+            // Console.WriteLine(databaseSystem);
+            // Console.WriteLine(filterTable);
+            // Console.WriteLine("\n\n--------------------------------------\n\n");
+            //
+            // foreach (var sortTable in sortTables)
+            // {
+            //     Console.WriteLine(databaseSystem);
+            //     Console.WriteLine(sortTable);
+            //     Console.WriteLine("\n\n--------------------------------------\n\n");
+            // }
         }
         
     }
@@ -112,6 +112,7 @@ public class StatisticsTablesGenerator
         {
             var statistics = allDataSizeOperationResults
                 .Where(r => r.DataSize == dataSize)
+                .OrderBy(r => operationTypes.IndexOf(r.OperationType))
                 .Select(r => r.Results[databaseSystem])
                 .ToList();
             
